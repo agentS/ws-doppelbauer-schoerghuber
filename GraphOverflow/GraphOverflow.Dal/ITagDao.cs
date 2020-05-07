@@ -5,7 +5,7 @@ namespace GraphOverflow.Dal
 {
   public interface ITagDao : IDao<Tag, int>
   {
-    IEnumerable<Tag> FindByName(string tagName);
-    IEnumerable<Tag> FindByAnswer(Answer answer);
+    IEnumerable<Tag> FindByPartialName(string tagName);
+    IEnumerable<Tag> FindByAnswer(int answerId);
   }
 }

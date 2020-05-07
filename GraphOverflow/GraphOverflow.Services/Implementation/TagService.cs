@@ -79,8 +79,15 @@ namespace GraphOverflow.Services.Implementation
     public IEnumerable<TagDto> FindAllTagsByName(string tagName)
     {
       //return tags.Where(tag => tag.Name.Contains(tagName));
-      return MapTags(tagDao.FindByName(tagName));
+      return MapTags(tagDao.FindByPartialName(tagName));
     }
+
+    public IEnumerable<TagDto> FindByQuestion(QuestionDto question)
+    {
+      return MapTags(tagDao.FindByAnswer(question.Id));
+    }
+
+
 
     public IObservable<TagDto> Tags()
     {

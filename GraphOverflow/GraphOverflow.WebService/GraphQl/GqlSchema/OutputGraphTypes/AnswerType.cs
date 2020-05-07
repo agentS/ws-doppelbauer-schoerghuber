@@ -1,28 +1,25 @@
 ﻿using GraphOverflow.Dtos;
-using GraphOverflow.Services;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes;
 using GraphQL.Types;
 using System;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
-  public class QuestionType : ObjectGraphType<QuestionDto>
+  public class AnswerType : ObjectGraphType<AnswerDto>
   {
     #region Members
-    private readonly ITagService tagService;
     #endregion Members
 
     #region Construction
-    public QuestionType(ITagService tagService)
+    public AnswerType()
     {
-      this.tagService = tagService;
       InitializeName();
       InitializeFields();
     }
 
     private void InitializeName()
     {
-      Name = "Question";
+      Name = "Answer";
     }
 
     private void InitializeFields()
@@ -30,24 +27,23 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<IdGraphType>>("id");
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
-      Field<NonNullGraphType<StringGraphType>>("title");
-      Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
-        name: "tags", resolve: ResolveTags);
-      Field<NonNullGraphType<ListGraphType<NonNullGraphType<AnswerType>>>>(
-        name: "answers", resolve: ResolveAnswers);
+      Field<NonNullGraphType<IntGraphType>>("upVoats");
+      Field<NonNullGraphType<QuestionType>>(
+        name: "question", resolve: ResolveQuestion);
+      Field<NonNullGraphType<ListGraphType<NonNullGraphType<CommentType>>>>(
+        name: "comments", resolve: ResolveComments);
 
       Interface<PostInterface>();
     }
     #endregion Construction
 
     #region Resolvers
-    private object ResolveTags(IResolveFieldContext<QuestionDto> context)
+    private object ResolveComments(IResolveFieldContext<AnswerDto> arg)
     {
-      var question = context.Source;
-      return tagService.FindByQuestion(question);
+      throw new NotImplementedException();
     }
 
-    private object ResolveAnswers(IResolveFieldContext<QuestionDto> arg)
+    private object ResolveQuestion(IResolveFieldContext<AnswerDto> arg)
     {
       throw new NotImplementedException();
     }

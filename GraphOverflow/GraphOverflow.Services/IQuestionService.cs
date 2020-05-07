@@ -1,10 +1,10 @@
-﻿using System;
+﻿using GraphOverflow.Dtos;
 using System.Collections.Generic;
-using System.Text;
 
 namespace GraphOverflow.Services
 {
   public interface IQuestionService
   {
+    IEnumerable<QuestionDto> FindQuestionsByTagId(int tagId);
   }
 }

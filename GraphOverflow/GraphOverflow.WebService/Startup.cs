@@ -45,7 +45,9 @@ namespace GraphOverflow.WebService
 
       // define services
       services.AddSingleton<ITagDao, TagDao>();
+      services.AddSingleton<IAnswerDao, AnswerDao>();
       services.AddSingleton<ITagService, TagService>();
+      services.AddSingleton<IQuestionService, QuestionService>();
 
       //define schema types
       //services.AddSingleton<TagType>();

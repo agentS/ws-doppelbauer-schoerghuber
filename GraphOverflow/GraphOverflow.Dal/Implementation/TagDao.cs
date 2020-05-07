@@ -1,6 +1,5 @@
 ﻿using GraphOverflow.Domain;
 using Npgsql;
-using System;
 using System.Collections.Generic;
 
 namespace GraphOverflow.Dal.Implementation
@@ -41,9 +40,31 @@ namespace GraphOverflow.Dal.Implementation
       return tags;
     }
 
-    public IEnumerable<Tag> FindByAnswer(Answer answer)
+    public IEnumerable<Tag> FindByAnswer(int answerId)
     {
-      throw new NotImplementedException();
+      IList<Tag> tags = new List<Tag>();
+      string sql = "select t.id, t.name " +
+        "from tag_answer " +
+        "inner join tag t on tag_answer.tag_id = t.id " +
+        "where tag_answer.answer_id = @id";
+      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      {
+        conn.Open();
+        using (var cmd = new NpgsqlCommand(sql, conn))
+        {
+          cmd.Parameters.AddWithValue("id", answerId);
+          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          {
+            while (reader.Read())
+            {
+              var id = (int)reader["id"];
+              var name = (string)reader["name"];
+              tags.Add(new Tag { Id = id, Name = name });
+            }
+          }
+        }
+      }
+      return tags;
     }
 
     public Tag FindById(int id)
@@ -70,16 +91,15 @@ namespace GraphOverflow.Dal.Implementation
       return tag;
     }
 
-    public IEnumerable<Tag> FindByName(string tagName)
+    public IEnumerable<Tag> FindByPartialName(string tagName)
     {
       IList<Tag> tags = new List<Tag>();
-      string sql = "select id, name from tag where name LIKE '%@name%'";
+      string sql = $"select id, name from tag where name LIKE '%{tagName}%'";
       using (var conn = new NpgsqlConnection(CONNECTION_STRING))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
         {
-          cmd.Parameters.AddWithValue("name", tagName);
           using (NpgsqlDataReader reader = cmd.ExecuteReader())
           {
             while (reader.Read())

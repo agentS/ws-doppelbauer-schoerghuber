@@ -10,6 +10,7 @@ namespace GraphOverflow.Services
   {
     IEnumerable<TagDto> FindAllTags();
     IEnumerable<TagDto> FindAllTagsByName(string tagName);
+    IEnumerable<TagDto> FindByQuestion(QuestionDto question);
     ConcurrentStack<TagDto> AllTags { get; }
     IObservable<TagDto> Tags();
     TagDto AddTag(string tagName);

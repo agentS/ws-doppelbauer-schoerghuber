@@ -1,4 +1,5 @@
 ﻿using GraphOverflow.Dtos;
+using GraphOverflow.Services;
 using GraphQL.Types;
 using System;
 
@@ -6,9 +7,14 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
   public class TagType : ObjectGraphType<TagDto>
   {
+    #region Members
+    private readonly IQuestionService questionService;
+    #endregion Members
+
     #region Construction
-    public TagType()
+    public TagType(IQuestionService questionService)
     {
+      this.questionService = questionService;
       InitializeName();
       InitializeFields();
     }
@@ -30,7 +36,8 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #region Resolvers
     private object ResolveQuestions(IResolveFieldContext<TagDto> context)
     {
-      throw new NotImplementedException();
+      var tagId = context.Source.Id;
+      return questionService.FindQuestionsByTagId(tagId);
     }
     #endregion Resolvers
   }
