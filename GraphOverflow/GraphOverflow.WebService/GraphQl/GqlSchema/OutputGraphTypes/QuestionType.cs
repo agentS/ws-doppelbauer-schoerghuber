@@ -2,7 +2,6 @@
 using GraphOverflow.Services;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes;
 using GraphQL.Types;
-using System;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
@@ -10,12 +9,14 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
   {
     #region Members
     private readonly ITagService tagService;
+    private readonly IAnswerService answerService;
     #endregion Members
 
     #region Construction
-    public QuestionType(ITagService tagService)
+    public QuestionType(ITagService tagService, IAnswerService answerService)
     {
       this.tagService = tagService;
+      this.answerService = answerService;
       InitializeName();
       InitializeFields();
     }
@@ -47,9 +48,11 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       return tagService.FindByQuestion(question);
     }
 
-    private object ResolveAnswers(IResolveFieldContext<QuestionDto> arg)
+    private object ResolveAnswers(IResolveFieldContext<QuestionDto> context)
     {
-      throw new NotImplementedException();
+      var question = context.Source;
+      return answerService.FindAnswersForQuestion(question);
+
     }
     #endregion Resolvers
   }

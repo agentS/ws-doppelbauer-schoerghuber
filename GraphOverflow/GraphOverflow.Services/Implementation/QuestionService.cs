@@ -12,6 +12,12 @@ namespace GraphOverflow.Services.Implementation
     {
       this.answerDao = answerDao;
     }
+
+    public QuestionDto FindQuestionForAnswer(AnswerDto answer)
+    {
+      return MapQuestion(answerDao.FindQuestionById(answer.QuestionId));
+    }
+
     public IEnumerable<QuestionDto> FindQuestionsByTagId(int tagId)
     {
       return MapQuestions(answerDao.FindQuestionsByTagId(tagId));
@@ -22,12 +28,12 @@ namespace GraphOverflow.Services.Implementation
       IList<QuestionDto> questionDtos = new List<QuestionDto>();
       foreach (var question in questions)
       {
-        questionDtos.Add(MapTag(question));
+        questionDtos.Add(MapQuestion(question));
       }
       return questionDtos;
     }
 
-    private QuestionDto MapTag(Answer question)
+    private QuestionDto MapQuestion(Answer question)
     {
       var dto = new QuestionDto
       {

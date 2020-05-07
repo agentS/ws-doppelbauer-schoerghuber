@@ -1,18 +1,20 @@
 ﻿using GraphOverflow.Dtos;
+using GraphOverflow.Services;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes;
 using GraphQL.Types;
-using System;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
   public class CommentType : ObjectGraphType<CommentDto>
   {
     #region Members
+    private readonly IAnswerService answerService;
     #endregion Members
 
     #region Construction
-    public CommentType()
+    public CommentType(IAnswerService answerService)
     {
+      this.answerService = answerService;
       InitializeName();
       InitializeFields();
     }
@@ -35,9 +37,10 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #endregion Construction
 
     #region Resolvers
-    private object ResolveAnswer(IResolveFieldContext<CommentDto> arg)
+    private object ResolveAnswer(IResolveFieldContext<CommentDto> context)
     {
-      throw new NotImplementedException();
+      var comment = context.Source;
+      return answerService.FindAnswerForComment(comment);
     }
     #endregion Resolvers
   }

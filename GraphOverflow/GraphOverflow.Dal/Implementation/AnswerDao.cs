@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GraphOverflow.Dal.Implementation
 {
@@ -46,6 +47,108 @@ namespace GraphOverflow.Dal.Implementation
         }
       }
       return tags;
+    }
+
+    public IEnumerable<Answer> FindAnswersByQuestionId(int questionId)
+    {
+      IList<Answer> answers = new List<Answer>();
+      string sql = "select id, content, question_id, created_at, up_votes from answer where question_id = @questId";
+      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      {
+        conn.Open();
+        using (var cmd = new NpgsqlCommand(sql, conn))
+        {
+          cmd.Parameters.AddWithValue("questId", questionId);
+          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          {
+            while (reader.Read())
+            {
+              var id = (int)reader["id"];
+              var content = (string)reader["content"];
+              var createdAt = (DateTime)reader["created_at"];
+              var upVotes = (int)reader["up_votes"];
+              var questId = (int)reader["question_id"];
+              answers.Add(new Answer
+              {
+                Id = id,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVoats = upVotes,
+                QuestionId = questId
+              });
+            }
+          }
+        }
+      }
+      return answers;
+    }
+
+    public Answer FindAnswerById(int answerId)
+    {
+      IList<Answer> answers = new List<Answer>();
+      string sql = "select id, content, question_id, created_at, up_votes from answer where id = @id";
+      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      {
+        conn.Open();
+        using (var cmd = new NpgsqlCommand(sql, conn))
+        {
+          cmd.Parameters.AddWithValue("id", answerId);
+          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          {
+            while (reader.Read())
+            {
+              var id = (int)reader["id"];
+              var content = (string)reader["content"];
+              var createdAt = (DateTime)reader["created_at"];
+              var upVotes = (int)reader["up_votes"];
+              var questId = (int)reader["question_id"];
+              answers.Add(new Answer
+              {
+                Id = id,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVoats = upVotes,
+                QuestionId = questId,
+              });
+            }
+          }
+        }
+      }
+      return answers.FirstOrDefault();
+    }
+
+    public Answer FindQuestionById(int questionId)
+    {
+      IList<Answer> answers = new List<Answer>();
+      string sql = "select id, title, content, question_id, created_at, up_votes from answer where id = @id";
+      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      {
+        conn.Open();
+        using (var cmd = new NpgsqlCommand(sql, conn))
+        {
+          cmd.Parameters.AddWithValue("id", questionId);
+          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          {
+            while (reader.Read())
+            {
+              var id = (int)reader["id"];
+              var content = (string)reader["content"];
+              var title = (string)reader["title"];
+              var createdAt = (DateTime)reader["created_at"];
+              var upVotes = (int)reader["up_votes"];
+              answers.Add(new Answer
+              {
+                Id = id,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVoats = upVotes,
+                Title = title
+              });
+            }
+          }
+        }
+      }
+      return answers.FirstOrDefault();
     }
   }
 }
