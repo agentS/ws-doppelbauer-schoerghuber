@@ -1,7 +1,7 @@
 ﻿CREATE TABLE answer(
     id SERIAL PRIMARY KEY NOT NULL,
-    title varchar(255),
-    content text NOT NULL,
+    title VARCHAR(255),
+    content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     up_votes INT DEFAULT 0,
     question_id INT,
@@ -10,7 +10,7 @@
 
 CREATE TABLE comment(
     id SERIAL PRIMARY KEY NOT NULL,
-    content text NOT NULL,
+    content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL,
     answer_id INT,
     CONSTRAINT fk_comment_answer FOREIGN KEY (answer_id) REFERENCES answer(id)
@@ -18,7 +18,7 @@ CREATE TABLE comment(
 
 CREATE TABLE tag(
     id SERIAL PRIMARY KEY NOT NULL,
-    name varchar(255)
+    name VARCHAR(255)
 );
 
 CREATE TABLE tag_answer(
