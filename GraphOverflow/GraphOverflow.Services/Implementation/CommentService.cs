@@ -23,6 +23,11 @@ namespace GraphOverflow.Services.Implementation
       return MapComments(commentDao.FindCommentsByAnswerId(answer.Id));
     }
 
+    public IEnumerable<CommentDto> FindCommentsForQuestion(QuestionDto question)
+    {
+      return MapComments(commentDao.FindCommentsByAnswerId(question.Id));
+    }
+
     private IEnumerable<CommentDto> MapComments(IEnumerable<Comment> comments)
     {
       IList<CommentDto> commentDtos = new List<CommentDto>();
