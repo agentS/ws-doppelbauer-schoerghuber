@@ -23,7 +23,7 @@ namespace GraphOverflow.WebService
     private const string GRAPHIQL_API_ENDPOINT = "/api/graphql";
 
     private const string GRAPH_OVERFLOW_CONNECTION_STRING_KEY = "GraphOverflowPostgreSQL";
-    
+
     public Startup(IConfiguration configuration, IWebHostEnvironment environment)
     {
       Configuration = configuration;
@@ -93,7 +93,11 @@ namespace GraphOverflow.WebService
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
       if (Environment.IsDevelopment())
+      {
         app.UseDeveloperExceptionPage();
+      }
+
+      app.UseCors(CORS_POLICY);
 
       app.UseWebSockets();
       app.UseGraphQLWebSockets<GraphQlSchema>(GRAPHIQL_API_ENDPOINT);
