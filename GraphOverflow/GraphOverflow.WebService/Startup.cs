@@ -1,3 +1,4 @@
+using System;
 using GraphOverflow.Dal;
 using GraphOverflow.Dal.Implementation;
 using GraphOverflow.Services;
@@ -20,6 +21,9 @@ namespace GraphOverflow.WebService
     private const string CORS_POLICY = "CorsPolicy";
     private const string GRAPHIQL_ENDPOINT = "/graphql";
     private const string GRAPHIQL_API_ENDPOINT = "/api/graphql";
+
+    private const string GRAPH_OVERFLOW_CONNECTION_STRING_KEY = "GraphOverflowPostgreSQL";
+    
     public Startup(IConfiguration configuration, IWebHostEnvironment environment)
     {
       Configuration = configuration;
@@ -42,11 +46,12 @@ namespace GraphOverflow.WebService
       //services.AddControllers()
       //  .AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
+      string connectionString = this.Configuration.GetConnectionString(GRAPH_OVERFLOW_CONNECTION_STRING_KEY);
 
       // define services
-      services.AddSingleton<ITagDao, TagDao>();
-      services.AddSingleton<IAnswerDao, AnswerDao>();
-      services.AddSingleton<ICommentDao, CommentDao>();
+      services.AddSingleton<ITagDao, TagDao>(factory => new TagDao(connectionString));
+      services.AddSingleton<IAnswerDao, AnswerDao>(factory => new AnswerDao(connectionString));
+      services.AddSingleton<ICommentDao, CommentDao>(factory => new CommentDao(connectionString));
       services.AddSingleton<ITagService, TagService>();
       services.AddSingleton<IQuestionService, QuestionService>();
       services.AddSingleton<IAnswerService, AnswerService>();

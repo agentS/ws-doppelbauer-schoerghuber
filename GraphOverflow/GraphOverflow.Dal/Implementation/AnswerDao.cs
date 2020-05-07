@@ -8,8 +8,12 @@ namespace GraphOverflow.Dal.Implementation
 {
   public class AnswerDao : IAnswerDao
   {
-    private const string CONNECTION_STRING =
-      "Host=localhost;Username=postgres;Password=postgres;Database=graphoverflow";
+    private readonly string connectionString;
+
+    public AnswerDao(string connectionString)
+    {
+      this.connectionString = connectionString;
+    }
 
     public IEnumerable<Answer> FindQuestionsByTagId(int tagId)
     {
@@ -19,7 +23,7 @@ namespace GraphOverflow.Dal.Implementation
         "inner join tag_answer ta on tag.id = ta.tag_id " +
         "inner join answer a on ta.answer_id = a.id " +
         "where tag.id = @id and a.question_id IS NULL";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
@@ -53,7 +57,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Answer> answers = new List<Answer>();
       string sql = "select id, content, question_id, created_at, up_votes from answer where question_id = @questId";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
@@ -87,7 +91,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Answer> answers = new List<Answer>();
       string sql = "select id, content, question_id, created_at, up_votes from answer where id = @id";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
@@ -121,7 +125,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Answer> answers = new List<Answer>();
       string sql = "select id, title, content, question_id, created_at, up_votes from answer where id = @id";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))

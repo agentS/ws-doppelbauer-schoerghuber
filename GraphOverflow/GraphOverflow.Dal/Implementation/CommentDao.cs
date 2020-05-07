@@ -7,9 +7,13 @@ namespace GraphOverflow.Dal.Implementation
 {
   public class CommentDao : ICommentDao
   {
-    private const string CONNECTION_STRING =
-      "Host=localhost;Username=postgres;Password=postgres;Database=graphoverflow";
+    private readonly string connectionString;
 
+    public CommentDao(string connectionString)
+    {
+      this.connectionString = connectionString;
+    }
+    
     public IEnumerable<Comment> FindCommentsByAnswerId(int answerId)
     {
       IList<Comment> comments = new List<Comment>();
@@ -17,7 +21,7 @@ namespace GraphOverflow.Dal.Implementation
         "from answer " +
         "inner join comment c on answer.id = c.answer_id " +
         "where answer.id = @answId";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))

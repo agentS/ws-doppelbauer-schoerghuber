@@ -6,11 +6,16 @@ namespace GraphOverflow.Dal.Implementation
 {
   public class TagDao : ITagDao
   {
-    private const string CONNECTION_STRING = 
-      "Host=localhost;Username=postgres;Password=postgres;Database=graphoverflow";
+    private readonly string connectionString;
+
+    public TagDao(string connectionString)
+    {
+      this.connectionString = connectionString;
+    }
+    
     public int Add(Tag tag)
     {
-      using var conn = new NpgsqlConnection(CONNECTION_STRING);
+      using var conn = new NpgsqlConnection(this.connectionString);
       conn.Open();
       string sql = "INSERT INTO tag (name) VALUES (@name) RETURNING id";
       using var cmd = new NpgsqlCommand(sql, conn);
@@ -23,7 +28,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Tag> tags = new List<Tag>();
       string sql = "select id, name from tag";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
@@ -47,7 +52,7 @@ namespace GraphOverflow.Dal.Implementation
         "from tag_answer " +
         "inner join tag t on tag_answer.tag_id = t.id " +
         "where tag_answer.answer_id = @id";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
@@ -71,7 +76,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       Tag tag = null;
       string sql = "select id, name from tag where id = @id";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
@@ -95,7 +100,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Tag> tags = new List<Tag>();
       string sql = $"select id, name from tag where name LIKE '%{tagName}%'";
-      using (var conn = new NpgsqlConnection(CONNECTION_STRING))
+      using (var conn = new NpgsqlConnection(this.connectionString))
       {
         conn.Open();
         using (var cmd = new NpgsqlCommand(sql, conn))
