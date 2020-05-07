@@ -46,25 +46,40 @@ namespace GraphOverflow.Services.Implementation
     public TagDto AddTag(string tagName)
     {
       Tag tag = new Tag { Name = tagName };
-      int result = tagDao.AddTag(tag);
+      int tagId = tagDao.Add(tag);
+      Tag newTag = tagDao.FindById(tagId);
+      if (newTag != null)
+      {
+        TagDto dto = MapTag(newTag);
+        AllTags.Push(dto);
+        tagStream.OnNext(dto);
+        return dto;
+      }
+      else
+      {
+        throw new ArgumentException();
+      }
 
-      TagDto newTag = new TagDto { Id = currentId++, Name = tagName };
-      tags.Add(newTag);
+      //TagDto newTag = new TagDto { Id = currentId++, Name = tagName };
+      //tags.Add(newTag);
 
-      AllTags.Push(newTag);
-      tagStream.OnNext(newTag);
+      //AllTags.Push(newTag);
+      //tagStream.OnNext(newTag);
       
-      return newTag;
     }
 
     public IEnumerable<TagDto> FindAllTags()
     {
-      return tags;
+      //return tags;
+      var tags = tagDao.FindAll();
+      IEnumerable<TagDto> tagDtos = MapTags(tags);
+      return tagDtos;
     }
 
     public IEnumerable<TagDto> FindAllTagsByName(string tagName)
     {
-      return tags.Where(tag => tag.Name.Contains(tagName));
+      //return tags.Where(tag => tag.Name.Contains(tagName));
+      return MapTags(tagDao.FindByName(tagName));
     }
 
     public IObservable<TagDto> Tags()
@@ -76,6 +91,22 @@ namespace GraphOverflow.Services.Implementation
     {
       await Task.Delay(100);
       return Tags();
+    }
+
+    private IEnumerable<TagDto> MapTags(IEnumerable<Tag> tags)
+    {
+      IList<TagDto> tagDtos = new List<TagDto>();
+      foreach (var tag in tags)
+      {
+        tagDtos.Add(MapTag(tag));
+      }
+
+      return tagDtos;
+    }
+
+    private static TagDto MapTag(Tag tag)
+    {
+      return new TagDto { Id = tag.Id, Name = tag.Name };
     }
   }
 }
