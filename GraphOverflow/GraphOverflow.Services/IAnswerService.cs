@@ -9,5 +9,6 @@ namespace GraphOverflow.Services
     Task<IEnumerable<AnswerDto>> FindAnswersForQuestion(QuestionDto question);
     Task<AnswerDto> FindAnswerForComment(CommentDto comment);
     Task<AnswerDto> UpvoatAnswer(int answerId, int userId);
+    Task<AnswerDto> CreateAnswer(string content, int questionId, int userId);
   }
 }

@@ -41,6 +41,13 @@ namespace GraphOverflow.Services.Implementation
       return MapAnswer(answer);
     }
 
+    public async Task<AnswerDto> CreateAnswer(string content, int questionId, int userId)
+    {
+      int id = await answerDao.CreateAnswer(content, questionId, userId);
+      Answer answer = await answerDao.FindAnswerById(id);
+      return MapAnswer(answer);
+    }
+
     private IEnumerable<AnswerDto> MapAnswers(IEnumerable<Answer> answers)
     {
       IList<AnswerDto> questionDtos = new List<AnswerDto>();

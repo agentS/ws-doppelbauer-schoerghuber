@@ -146,7 +146,7 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<Answer> FindAnswerById(int answerId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, content, question_id, created_at, user_id " +
+      string sql = "select id, content, question_id, created_at, user_id, " +
         "(select count(*) from answer_up_vote where answer_id = @id) AS up_votes " +
         "from answer where id = @id";
       await using (var conn = new NpgsqlConnection(this.connectionString))
@@ -280,6 +280,29 @@ namespace GraphOverflow.Dal.Implementation
 
           int res = await command.ExecuteNonQueryAsync();
           return res > 0;
+        }
+      }
+    }
+
+    public async Task<int> CreateAnswer(string content, int questionId, int userId)
+    {
+      const string STATEMENT = @"
+        INSERT INTO answer(content, created_at, user_id, question_id)
+        VALUES (@content, @created_at, @user_id, @question_id)
+        RETURNING id
+      ";
+      using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        using (var command = new NpgsqlCommand(STATEMENT, connection))
+        {
+          command.Parameters.AddWithValue("content", content);
+          command.Parameters.AddWithValue("created_at", DateTime.Now);
+          command.Parameters.AddWithValue("user_id", userId);
+          command.Parameters.AddWithValue("question_id", questionId);
+
+          int id = ((int)(await command.ExecuteScalarAsync()));
+          return id;
         }
       }
     }

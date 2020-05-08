@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using GraphOverflow.Dtos;
 using GraphOverflow.Dtos.Input;
 using GraphOverflow.GraphQl.InputGraphTypes;
@@ -81,6 +82,17 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       addQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       addQuestionField.Description = "adds a question";
 
+      var addAnswerField = Field<AnswerType>(
+        name: "addAnswer",
+        arguments: new QueryArguments(
+          new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" },
+          new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "content" }
+        ),
+        resolve: ResolveAddAnswer
+      );
+      addAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      addAnswerField.Description = "adds an answer";
+
       Field<AuthPayloadGraphType>(
        name: "login",
        arguments: new QueryArguments(
@@ -128,6 +140,16 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       var userLoginData = context.GetArgument<UserLoginInputDto>("loginData");
       var result = authenticationService.Authenticate(userLoginData);
       return result;
+    }
+
+    private async Task<object> ResolveAddAnswer(IResolveFieldContext<object> context)
+    {
+      GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+      var questionId = context.GetArgument<int>("questionId");
+      var content = context.GetArgument<string>("content");
+      AnswerDto answer = await answerService.CreateAnswer(content, questionId, userContext.User.Id);
+      return answer;
+
     }
     #endregion Resolvers
   }
