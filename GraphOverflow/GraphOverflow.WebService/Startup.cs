@@ -1,4 +1,3 @@
-using System;
 using GraphOverflow.Dal;
 using GraphOverflow.Dal.Implementation;
 using GraphOverflow.Services;
@@ -52,6 +51,7 @@ namespace GraphOverflow.WebService
       services.AddSingleton<ITagDao, TagDao>(factory => new TagDao(connectionString));
       services.AddSingleton<IAnswerDao, AnswerDao>(factory => new AnswerDao(connectionString));
       services.AddSingleton<ICommentDao, CommentDao>(factory => new CommentDao(connectionString));
+      services.AddSingleton<IAuthenticationService, AuthenticationService>();
       services.AddSingleton<ITagService, TagService>();
       services.AddSingleton<IQuestionService, QuestionService>();
       services.AddSingleton<IAnswerService, AnswerService>();
@@ -71,10 +71,11 @@ namespace GraphOverflow.WebService
             //options.EnableMetrics = Environment.IsDevelopment();
             options.ExposeExceptions = Environment.IsDevelopment();
           })
+          .AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
           .AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
           .AddWebSockets() // Add required services for web socket support
           //.AddDataLoader() // Add required services for DataLoader support
-          .AddGraphTypes(typeof(GraphQlSchema)); // Add all IGraphType implementors in assembly which GraphQlSchema exists 
+          .AddGraphTypes(typeof(GraphQlSchema)); // Add all IGraphType implementors in assembly which GraphQlSchema exists
 
       // define services
       //services.AddSingleton<ITagService, TagService>();

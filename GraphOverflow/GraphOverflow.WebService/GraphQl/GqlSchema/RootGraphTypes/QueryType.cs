@@ -27,6 +27,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     {
       Field<StringGraphType>(name: "hello", resolve: ResolveHello);
       Field<StringGraphType>(name: "name", resolve: ResolveName);
+      Field<IntGraphType>(name: "userId", resolve: ResolveUserId);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
         name: "allTags", resolve: ResolveAllTags
       );
@@ -41,13 +42,22 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
         )
       ).Description = "get all tags that match the %tagName%";
     }
-
     #endregion Construction
 
     #region Resolvers
     public object ResolveHello(IResolveFieldContext<object> context) => "hello";
 
     public object ResolveName(IResolveFieldContext<object> context) => "Alex";
+
+    public object ResolveUserId(IResolveFieldContext<object> context)
+    {
+      GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+      if (userContext.IsUserAuthenticated())
+      {
+        return userContext.GetIdOfAuthenticatedUser();
+      }
+      return null;
+    }
 
     public object ResolveAllTags(IResolveFieldContext<object> context)
     {

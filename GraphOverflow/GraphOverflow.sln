@@ -11,9 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphOverflow.Dtos", "Graph
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphOverflow.Services", "GraphOverflow.Services\GraphOverflow.Services.csproj", "{03EF74A2-9A13-4859-88B4-48A6DCEDD22E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphOverflow.Dal", "GraphOverflow.Dal\GraphOverflow.Dal.csproj", "{DD629C07-4D86-496A-AB88-B7162B5CDE19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphOverflow.Dal", "GraphOverflow.Dal\GraphOverflow.Dal.csproj", "{DD629C07-4D86-496A-AB88-B7162B5CDE19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphOverflow.Domain", "GraphOverflow.Domain\GraphOverflow.Domain.csproj", "{541A90D7-D1CA-4124-BE77-0D5C6EC1DA05}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GraphOverflow.Domain", "GraphOverflow.Domain\GraphOverflow.Domain.csproj", "{541A90D7-D1CA-4124-BE77-0D5C6EC1DA05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphOverflow.Tests.Services", "GraphOverflow.Tests.Services\GraphOverflow.Tests.Services.csproj", "{CF491576-58C9-43BC-8CB9-5776D23A0399}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{541A90D7-D1CA-4124-BE77-0D5C6EC1DA05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{541A90D7-D1CA-4124-BE77-0D5C6EC1DA05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{541A90D7-D1CA-4124-BE77-0D5C6EC1DA05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF491576-58C9-43BC-8CB9-5776D23A0399}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF491576-58C9-43BC-8CB9-5776D23A0399}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF491576-58C9-43BC-8CB9-5776D23A0399}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF491576-58C9-43BC-8CB9-5776D23A0399}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
