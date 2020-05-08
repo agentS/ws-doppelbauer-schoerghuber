@@ -42,7 +42,7 @@ namespace GraphOverflow.Services.Implementation
       if (question != null)
       {
         question.UpVoats++;
-        await answerDao.UpdateQuestion(question);
+        await answerDao.Update(question);
       }
       return MapQuestion(question);
     }

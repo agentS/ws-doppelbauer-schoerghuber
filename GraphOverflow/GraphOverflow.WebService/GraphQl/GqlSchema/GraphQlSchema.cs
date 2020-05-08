@@ -9,12 +9,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema
   {
     public GraphQlSchema(ITagService tagService, 
       IQuestionService questionService, 
-      IAuthenticationService authenticationService, 
+      IAuthenticationService authenticationService,
+      IAnswerService answerService,
       IServiceProvider provider) 
       : base(provider)
     {
       Query = new QueryType(tagService);
-      Mutation = new MutationType(tagService, questionService, authenticationService);
+      Mutation = new MutationType(tagService, questionService, answerService, authenticationService);
       Subscription = new SubscriptionType(tagService);
     }
   }

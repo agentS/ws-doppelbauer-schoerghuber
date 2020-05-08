@@ -20,6 +20,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     #region Members
     private readonly ITagService tagService;
     private readonly IQuestionService questionService;
+    private readonly IAnswerService answerService;
     private readonly IAuthenticationService authenticationService;
     #endregion Members
 
@@ -27,11 +28,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     public MutationType(
       ITagService tagService,
       IQuestionService questionService,
+      IAnswerService answerService,
       IAuthenticationService authenticationService
     )
     {
       this.tagService = tagService;
       this.questionService = questionService;
+      this.answerService = answerService;
       this.authenticationService = authenticationService;
       InitializeTypeName();
       InitializeFields();
@@ -60,6 +63,14 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
         resolve: ResolveUpvoatQuestion
       );
       upVoatQuestionField.Description = "upVoat question";
+
+      var upVoatAnswerField = Field<AnswerType>(
+        name: "upVoatAnswer",
+        arguments: new QueryArguments(
+          new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" }),
+        resolve: ResolveUpvoatAnswer
+      );
+      upVoatAnswerField.Description = "upVoat answer";
 
       Field<QuestionType>(
         name: "addQuestion",
@@ -91,6 +102,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     {
       int questionId = context.GetArgument<int>("questionId");
       QuestionDto updatedQuestion = await questionService.UpvoatQuestion(questionId);
+      return updatedQuestion;
+    }
+
+    private async Task<object> ResolveUpvoatAnswer(IResolveFieldContext<object> context)
+    {
+      int answerId = context.GetArgument<int>("answerId");
+      AnswerDto updatedQuestion = await answerService.UpvoatAnswer(answerId);
       return updatedQuestion;
     }
 

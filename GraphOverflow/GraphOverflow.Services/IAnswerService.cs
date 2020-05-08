@@ -8,5 +8,6 @@ namespace GraphOverflow.Services
   {
     Task<IEnumerable<AnswerDto>> FindAnswersForQuestion(QuestionDto question);
     Task<AnswerDto> FindAnswerForComment(CommentDto comment);
+    Task<AnswerDto> UpvoatAnswer(int id);
   }
 }

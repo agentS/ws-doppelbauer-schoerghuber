@@ -23,7 +23,8 @@ namespace GraphOverflow.Dal.Implementation
         "from tag " +
         "inner join tag_answer ta on tag.id = ta.tag_id " +
         "inner join answer a on ta.answer_id = a.id " +
-        "where tag.id = @id and a.question_id IS NULL";
+        "where tag.id = @id and a.question_id IS NULL " +
+        "order by up_votes desc";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -57,7 +58,9 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<IEnumerable<Answer>> FindAnswersByQuestionId(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, content, question_id, created_at, up_votes from answer where question_id = @questId";
+      string sql = "select id, content, question_id, created_at, up_votes from answer " +
+        "where question_id = @questId " +
+        "order by up_votes desc";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -179,20 +182,22 @@ namespace GraphOverflow.Dal.Implementation
       }
     }
 
-    public async Task<bool> UpdateQuestion(Answer question)
+    public async Task<bool> Update(Answer question)
     {
       const string STATEMENT = @"
         UPDATE answer
         SET title = @title, content = @content, up_votes = @up_votes
+        WHERE id = @id
       ";
       using (var connection = new NpgsqlConnection(this.connectionString))
       {
         await connection.OpenAsync();
         using (var command = new NpgsqlCommand(STATEMENT, connection))
         {
-          command.Parameters.AddWithValue("title", question.Title);
+          command.Parameters.AddWithValue("title", (object)question.Title ?? DBNull.Value);
           command.Parameters.AddWithValue("content", question.Content);
           command.Parameters.AddWithValue("up_votes", question.UpVoats);
+          command.Parameters.AddWithValue("id", question.Id);
 
           int res = await command.ExecuteNonQueryAsync();
           return res > 0;

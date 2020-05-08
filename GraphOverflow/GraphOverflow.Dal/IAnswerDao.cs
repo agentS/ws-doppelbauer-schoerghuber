@@ -11,6 +11,6 @@ namespace GraphOverflow.Dal
     Task<Answer> FindAnswerById(int answerId);
     Task<Answer> FindQuestionById(int questionId);
     Task<int> CreateQuestion(Answer question);
-    Task<bool> UpdateQuestion(Answer question);
+    Task<bool> Update(Answer question);
   }
 }

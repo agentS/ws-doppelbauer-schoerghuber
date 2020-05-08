@@ -30,6 +30,17 @@ namespace GraphOverflow.Services.Implementation
       return MapAnswer(await answerDao.FindAnswerById(comment.AnswerId));
     }
 
+    public async Task<AnswerDto> UpvoatAnswer(int id)
+    {
+      var answer = await answerDao.FindAnswerById(id);
+      if (answer != null)
+      {
+        answer.UpVoats++;
+        await answerDao.Update(answer);
+      }
+      return MapAnswer(answer);
+    }
+
     private IEnumerable<AnswerDto> MapAnswers(IEnumerable<Answer> answers)
     {
       IList<AnswerDto> questionDtos = new List<AnswerDto>();
