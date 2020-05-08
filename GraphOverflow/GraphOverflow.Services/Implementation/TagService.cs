@@ -43,11 +43,11 @@ namespace GraphOverflow.Services.Implementation
     #endregion Properties
 
 
-    public TagDto AddTag(string tagName)
+    public async Task<TagDto> AddTag(string tagName)
     {
       Tag tag = new Tag { Name = tagName };
-      int tagId = tagDao.Add(tag);
-      Tag newTag = tagDao.FindById(tagId);
+      int tagId = await tagDao.Add(tag);
+      Tag newTag = await tagDao.FindById(tagId);
       if (newTag != null)
       {
         TagDto dto = MapTag(newTag);
@@ -68,23 +68,23 @@ namespace GraphOverflow.Services.Implementation
       
     }
 
-    public IEnumerable<TagDto> FindAllTags()
+    public async Task<IEnumerable<TagDto>> FindAllTags()
     {
       //return tags;
-      var tags = tagDao.FindAll();
+      var tags = await tagDao.FindAll();
       IEnumerable<TagDto> tagDtos = MapTags(tags);
       return tagDtos;
     }
 
-    public IEnumerable<TagDto> FindAllTagsByName(string tagName)
+    public async Task<IEnumerable<TagDto>> FindAllTagsByName(string tagName)
     {
       //return tags.Where(tag => tag.Name.Contains(tagName));
-      return MapTags(tagDao.FindByPartialName(tagName));
+      return MapTags(await tagDao.FindByPartialName(tagName));
     }
 
-    public IEnumerable<TagDto> FindByQuestion(QuestionDto question)
+    public async Task<IEnumerable<TagDto>> FindByQuestion(QuestionDto question)
     {
-      return MapTags(tagDao.FindByAnswer(question.Id));
+      return MapTags(await tagDao.FindByAnswer(question.Id));
     }
 
 

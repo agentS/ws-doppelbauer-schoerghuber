@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal
 {
   public interface IDao<Type, ID>
   {
-    ID Add(Type tag);
-    Type FindById(ID id);
-    IEnumerable<Type> FindAll();
+    Task<ID> Add(Type tag);
+    Task<Type> FindById(ID id);
+    Task<IEnumerable<Type>> FindAll();
   }
 }

@@ -1,6 +1,7 @@
 ﻿using GraphOverflow.Domain;
 using Npgsql;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal.Implementation
 {
@@ -13,28 +14,28 @@ namespace GraphOverflow.Dal.Implementation
       this.connectionString = connectionString;
     }
     
-    public int Add(Tag tag)
+    public async Task<int> Add(Tag tag)
     {
       using var conn = new NpgsqlConnection(this.connectionString);
-      conn.Open();
+      await conn.OpenAsync();
       string sql = "INSERT INTO tag (name) VALUES (@name) RETURNING id";
       using var cmd = new NpgsqlCommand(sql, conn);
       cmd.Parameters.AddWithValue("name", tag.Name);
-      int res = (int)cmd.ExecuteScalar();
+      int res = (int) await cmd.ExecuteScalarAsync();
       return res;
     }
 
-    public IEnumerable<Tag> FindAll()
+    public async Task<IEnumerable<Tag>> FindAll()
     {
       IList<Tag> tags = new List<Tag>();
       string sql = "select id, name from tag";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
-        using (NpgsqlDataReader reader = cmd.ExecuteReader())
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
+        await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
         {
-          while (reader.Read())
+          while (await reader.ReadAsync())
           {
             var id = (int)reader["id"];
             var name = (string)reader["name"];
@@ -45,22 +46,22 @@ namespace GraphOverflow.Dal.Implementation
       return tags;
     }
 
-    public IEnumerable<Tag> FindByAnswer(int answerId)
+    public async Task<IEnumerable<Tag>> FindByAnswer(int answerId)
     {
       IList<Tag> tags = new List<Tag>();
       string sql = "select t.id, t.name " +
         "from tag_answer " +
         "inner join tag t on tag_answer.tag_id = t.id " +
         "where tag_answer.answer_id = @id";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("id", answerId);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var name = (string)reader["name"];
@@ -72,19 +73,19 @@ namespace GraphOverflow.Dal.Implementation
       return tags;
     }
 
-    public Tag FindById(int id)
+    public async Task<Tag> FindById(int id)
     {
       Tag tag = null;
       string sql = "select id, name from tag where id = @id";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("id", id);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            if (reader.Read())
+            if (await reader.ReadAsync())
             {
               var tagId = (int)reader["id"];
               var tagName = (string)reader["name"];
@@ -96,18 +97,18 @@ namespace GraphOverflow.Dal.Implementation
       return tag;
     }
 
-    public IEnumerable<Tag> FindByPartialName(string tagName)
+    public async Task<IEnumerable<Tag>> FindByPartialName(string tagName)
     {
       IList<Tag> tags = new List<Tag>();
       string sql = $"select id, name from tag where name LIKE '%{tagName}%'";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var name = (string)reader["name"];

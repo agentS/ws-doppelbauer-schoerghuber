@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal.Implementation
 {
@@ -14,22 +15,22 @@ namespace GraphOverflow.Dal.Implementation
       this.connectionString = connectionString;
     }
     
-    public IEnumerable<Comment> FindCommentsByAnswerId(int answerId)
+    public async Task<IEnumerable<Comment>> FindCommentsByAnswerId(int answerId)
     {
       IList<Comment> comments = new List<Comment>();
       string sql = "select c.id, c.content, c.created_at, c.answer_id " +
         "from answer " +
         "inner join comment c on answer.id = c.answer_id " +
         "where answer.id = @answId";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("answId", answerId);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var content = (string)reader["content"];

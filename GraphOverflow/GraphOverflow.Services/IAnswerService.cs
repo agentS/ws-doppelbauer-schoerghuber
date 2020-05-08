@@ -1,11 +1,12 @@
 ﻿using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services
 {
   public interface IAnswerService
   {
-    IEnumerable<AnswerDto> FindAnswersForQuestion(QuestionDto question);
-    AnswerDto FindAnswerForComment(CommentDto comment);
+    Task<IEnumerable<AnswerDto>> FindAnswersForQuestion(QuestionDto question);
+    Task<AnswerDto> FindAnswerForComment(CommentDto comment);
   }
 }

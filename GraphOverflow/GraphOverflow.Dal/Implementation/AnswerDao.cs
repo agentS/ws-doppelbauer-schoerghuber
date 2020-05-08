@@ -16,7 +16,7 @@ namespace GraphOverflow.Dal.Implementation
       this.connectionString = connectionString;
     }
 
-    public IEnumerable<Answer> FindQuestionsByTagId(int tagId)
+    public async Task<IEnumerable<Answer>> FindQuestionsByTagId(int tagId)
     {
       IList<Answer> tags = new List<Answer>();
       string sql = "select a.id, a.title, a.content, a.created_at, a.question_id, a.up_votes " +
@@ -24,15 +24,15 @@ namespace GraphOverflow.Dal.Implementation
         "inner join tag_answer ta on tag.id = ta.tag_id " +
         "inner join answer a on ta.answer_id = a.id " +
         "where tag.id = @id and a.question_id IS NULL";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("id", tagId);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var title = (string)reader["title"];
@@ -54,19 +54,19 @@ namespace GraphOverflow.Dal.Implementation
       return tags;
     }
 
-    public IEnumerable<Answer> FindAnswersByQuestionId(int questionId)
+    public async Task<IEnumerable<Answer>> FindAnswersByQuestionId(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
       string sql = "select id, content, question_id, created_at, up_votes from answer where question_id = @questId";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("questId", questionId);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var content = (string)reader["content"];
@@ -88,19 +88,19 @@ namespace GraphOverflow.Dal.Implementation
       return answers;
     }
 
-    public Answer FindAnswerById(int answerId)
+    public async Task<Answer> FindAnswerById(int answerId)
     {
       IList<Answer> answers = new List<Answer>();
       string sql = "select id, content, question_id, created_at, up_votes from answer where id = @id";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("id", answerId);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var content = (string)reader["content"];
@@ -122,19 +122,19 @@ namespace GraphOverflow.Dal.Implementation
       return answers.FirstOrDefault();
     }
 
-    public Answer FindQuestionById(int questionId)
+    public async Task<Answer> FindQuestionById(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
       string sql = "select id, title, content, question_id, created_at, up_votes from answer where id = @id";
-      using (var conn = new NpgsqlConnection(this.connectionString))
+      await using (var conn = new NpgsqlConnection(this.connectionString))
       {
-        conn.Open();
-        using (var cmd = new NpgsqlCommand(sql, conn))
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
         {
           cmd.Parameters.AddWithValue("id", questionId);
-          using (NpgsqlDataReader reader = cmd.ExecuteReader())
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
           {
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
               var content = (string)reader["content"];
@@ -165,7 +165,7 @@ namespace GraphOverflow.Dal.Implementation
       ";
       using (var connection = new NpgsqlConnection(this.connectionString))
       {
-        connection.Open();
+        await connection.OpenAsync();
         using (var command = new NpgsqlCommand(STATEMENT, connection))
         {
           command.Parameters.AddWithValue("title", question.Title);

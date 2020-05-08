@@ -1,10 +1,11 @@
 ﻿using GraphOverflow.Domain;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal
 {
   public interface ICommentDao
   {
-    IEnumerable<Comment> FindCommentsByAnswerId(int answerId);
+    Task<IEnumerable<Comment>> FindCommentsByAnswerId(int answerId);
   }
 }

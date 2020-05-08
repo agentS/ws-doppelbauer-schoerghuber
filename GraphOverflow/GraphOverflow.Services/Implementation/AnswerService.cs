@@ -2,6 +2,7 @@
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
 {
@@ -19,14 +20,14 @@ namespace GraphOverflow.Services.Implementation
     #endregion Construction
 
 
-    public IEnumerable<AnswerDto> FindAnswersForQuestion(QuestionDto question)
+    public async Task<IEnumerable<AnswerDto>> FindAnswersForQuestion(QuestionDto question)
     {
-      return MapAnswers(answerDao.FindAnswersByQuestionId(question.Id));
+      return MapAnswers(await answerDao.FindAnswersByQuestionId(question.Id));
     }
 
-    public AnswerDto FindAnswerForComment(CommentDto comment)
+    public async Task<AnswerDto> FindAnswerForComment(CommentDto comment)
     {
-      return MapAnswer(answerDao.FindAnswerById(comment.AnswerId));
+      return MapAnswer(await answerDao.FindAnswerById(comment.AnswerId));
     }
 
     private IEnumerable<AnswerDto> MapAnswers(IEnumerable<Answer> answers)

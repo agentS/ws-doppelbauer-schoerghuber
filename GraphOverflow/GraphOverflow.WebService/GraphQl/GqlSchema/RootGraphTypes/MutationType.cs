@@ -64,12 +64,6 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     public async Task<object> ResolveAddQuestion(IResolveFieldContext<object> context)
     {
       QuestionInputDto question = context.GetArgument<QuestionInputDto>("question");
-      /*QuestionInputDto questionDto = new QuestionInputDto()
-      {
-        Title = question.GetField("title").As<string>(),
-        Content = question.GetField("question").As<string>(),
-      };
-      */
       QuestionDto createdQuestion = await questionService.CreateQuestion(question);
       return createdQuestion;
     }

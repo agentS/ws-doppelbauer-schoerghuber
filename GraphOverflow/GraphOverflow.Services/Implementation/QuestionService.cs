@@ -15,9 +15,9 @@ namespace GraphOverflow.Services.Implementation
       this.answerDao = answerDao;
     }
 
-    public QuestionDto FindQuestionForAnswer(AnswerDto answer)
+    public async Task<QuestionDto> FindQuestionForAnswer(AnswerDto answer)
     {
-      return MapQuestion(answerDao.FindQuestionById(answer.QuestionId));
+      return MapQuestion(await answerDao.FindQuestionById(answer.QuestionId));
     }
 
     public async Task<QuestionDto> CreateQuestion(QuestionInputDto questionDto)
@@ -28,12 +28,12 @@ namespace GraphOverflow.Services.Implementation
         Content = questionDto.Content,
       };
       int questionId = await answerDao.CreateQuestion(question);
-      return MapQuestion(answerDao.FindQuestionById(questionId));
+      return MapQuestion(await answerDao.FindQuestionById(questionId));
     }
 
-    public IEnumerable<QuestionDto> FindQuestionsByTagId(int tagId)
+    public async Task<IEnumerable<QuestionDto>> FindQuestionsByTagId(int tagId)
     {
-      return MapQuestions(answerDao.FindQuestionsByTagId(tagId));
+      return MapQuestions(await answerDao.FindQuestionsByTagId(tagId));
     }
 
     private IEnumerable<QuestionDto> MapQuestions(IEnumerable<Answer> questions)

@@ -2,6 +2,7 @@
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
 {
@@ -18,14 +19,14 @@ namespace GraphOverflow.Services.Implementation
     }
     #endregion Construction
 
-    public IEnumerable<CommentDto> FindCommentsForAnswer(AnswerDto answer)
+    public async Task<IEnumerable<CommentDto>> FindCommentsForAnswer(AnswerDto answer)
     {
-      return MapComments(commentDao.FindCommentsByAnswerId(answer.Id));
+      return MapComments(await commentDao.FindCommentsByAnswerId(answer.Id));
     }
 
-    public IEnumerable<CommentDto> FindCommentsForQuestion(QuestionDto question)
+    public async Task<IEnumerable<CommentDto>> FindCommentsForQuestion(QuestionDto question)
     {
-      return MapComments(commentDao.FindCommentsByAnswerId(question.Id));
+      return MapComments(await commentDao.FindCommentsByAnswerId(question.Id));
     }
 
     private IEnumerable<CommentDto> MapComments(IEnumerable<Comment> comments)
