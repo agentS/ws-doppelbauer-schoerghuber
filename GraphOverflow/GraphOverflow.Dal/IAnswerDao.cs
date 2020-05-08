@@ -1,5 +1,6 @@
 ﻿using GraphOverflow.Domain;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal
 {
@@ -9,5 +10,7 @@ namespace GraphOverflow.Dal
     IEnumerable<Answer> FindAnswersByQuestionId(int questionId);
     Answer FindAnswerById(int answerId);
     Answer FindQuestionById(int questionId);
+
+    Task<int> CreateQuestion(Answer question);
   }
 }

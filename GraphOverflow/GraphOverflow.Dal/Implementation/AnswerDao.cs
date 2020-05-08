@@ -3,6 +3,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal.Implementation
 {
@@ -153,6 +154,29 @@ namespace GraphOverflow.Dal.Implementation
         }
       }
       return answers.FirstOrDefault();
+    }
+
+    public async Task<int> CreateQuestion(Answer question)
+    {
+      const string STATEMENT = @"
+        INSERT INTO answer(title, content, created_at, up_votes)
+        VALUES (@title, @content, @created_at, @up_votes)
+        RETURNING id
+      ";
+      using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        connection.Open();
+        using (var command = new NpgsqlCommand(STATEMENT, connection))
+        {
+          command.Parameters.AddWithValue("title", question.Title);
+          command.Parameters.AddWithValue("content", question.Content);
+          command.Parameters.AddWithValue("created_at", DateTime.Now);
+          command.Parameters.AddWithValue("up_votes", 0);
+
+          int id = ((int) (await command.ExecuteScalarAsync()));
+          return id;
+        }
+      }
     }
   }
 }

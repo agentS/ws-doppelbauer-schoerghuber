@@ -1,5 +1,7 @@
 ﻿using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using GraphOverflow.Dtos.Input;
 
 namespace GraphOverflow.Services
 {
@@ -7,5 +9,7 @@ namespace GraphOverflow.Services
   {
     IEnumerable<QuestionDto> FindQuestionsByTagId(int tagId);
     QuestionDto FindQuestionForAnswer(AnswerDto answer);
+
+    Task<QuestionDto> CreateQuestion(QuestionInputDto question);
   }
 }
