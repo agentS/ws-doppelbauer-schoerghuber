@@ -19,9 +19,11 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<IEnumerable<Answer>> FindLatestQuestions()
     {
       const string QUERY = @"
-        SELECT id, title, content, created_at, up_votes FROM answer
-        WHERE question_id IS NULL
-        ORDER BY created_at DESC
+        SELECT a.id, a.title, a.content, a.created_at,
+       (select count(*) from answer_up_vote where answer_id = a.id) as up_votes
+        FROM answer a
+        WHERE a.question_id IS NULL
+        ORDER BY a.created_at DESC
       ";
       await using (var connection = new NpgsqlConnection(this.connectionString))
       {
@@ -58,14 +60,12 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Answer> tags = new List<Answer>();
       string sql = @"
-        select a.id, a.title, a.content, a.created_at, a.question_id,
-        count(*) AS up_votes
+        select a.id, a.title, a.content, a.created_at, a.question_id, a.user_id,
+        (select count(*) from answer_up_vote where answer_id = a.id) as up_votes
         from tag
         inner join tag_answer ta on tag.id = ta.tag_id
         inner join answer a on ta.answer_id = a.id
-        inner join answer_up_vote auv on a.id = auv.answer_id
         where tag.id = @id and a.question_id IS NULL
-        group by a.id, a.title, a.content, a.created_at, a.question_id
         order by up_votes desc;
       "; 
 
@@ -80,6 +80,7 @@ namespace GraphOverflow.Dal.Implementation
             while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
+              var userId = (int)reader["user_id"];
               var title = (string)reader["title"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
@@ -90,7 +91,8 @@ namespace GraphOverflow.Dal.Implementation
                 Title = title,
                 Content = content,
                 CreatedAt = createdAt,
-                UpVotes = upVotes
+                UpVotes = upVotes,
+                UserId = userId
               });
             }
           }
@@ -103,12 +105,10 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Answer> answers = new List<Answer>();
       string sql = @"
-        select id, content, question_id, created_at,
-        count(*) AS up_votes
-        from answer
-        inner join answer_up_vote auv on answer.id = auv.answer_id
+        select a.id, a.content, a.question_id, a.created_at, a.user_id,
+        (select count(*) from answer_up_vote where answer_id = a.id) as up_votes
+        from answer a
         where question_id = @questId
-        group by id, content, question_id, created_at
         order by up_votes desc;
       ";
       await using (var conn = new NpgsqlConnection(this.connectionString))
@@ -122,6 +122,7 @@ namespace GraphOverflow.Dal.Implementation
             while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
+              var userId = (int)reader["user_id"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
               var upVotes = (long)reader["up_votes"];
@@ -132,7 +133,8 @@ namespace GraphOverflow.Dal.Implementation
                 Content = content,
                 CreatedAt = createdAt,
                 UpVotes = upVotes,
-                QuestionId = questId
+                QuestionId = questId,
+                UserId = userId
               });
             }
           }
@@ -144,7 +146,7 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<Answer> FindAnswerById(int answerId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, content, question_id, created_at, " +
+      string sql = "select id, content, question_id, created_at, user_id " +
         "(select count(*) from answer_up_vote where answer_id = @id) AS up_votes " +
         "from answer where id = @id";
       await using (var conn = new NpgsqlConnection(this.connectionString))
@@ -158,6 +160,7 @@ namespace GraphOverflow.Dal.Implementation
             while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
+              var userId = (int)reader["user_id"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
               var upVotes = (long)reader["up_votes"];
@@ -169,6 +172,7 @@ namespace GraphOverflow.Dal.Implementation
                 CreatedAt = createdAt,
                 UpVotes = upVotes,
                 QuestionId = questId,
+                UserId = userId
               });
             }
           }
@@ -180,7 +184,7 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<Answer> FindQuestionById(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, title, content, question_id, created_at, " +
+      string sql = "select id, title, content, question_id, created_at, user_id " +
         "(select count(*) from answer_up_vote where answer_id = @id) AS up_votes " +
         "from answer where id = @id";
       await using (var conn = new NpgsqlConnection(this.connectionString))
@@ -194,6 +198,7 @@ namespace GraphOverflow.Dal.Implementation
             while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
+              var userId = (int)reader["user_id"];
               var content = (string)reader["content"];
               var title = (string)reader["title"];
               var createdAt = (DateTime)reader["created_at"];
@@ -204,7 +209,8 @@ namespace GraphOverflow.Dal.Implementation
                 Content = content,
                 CreatedAt = createdAt,
                 UpVotes = upVotes,
-                Title = title
+                Title = title,
+                UserId = userId
               });
             }
           }

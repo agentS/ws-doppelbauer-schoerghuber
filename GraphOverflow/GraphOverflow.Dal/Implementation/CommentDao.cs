@@ -18,7 +18,7 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<IEnumerable<Comment>> FindCommentsByAnswerId(int answerId)
     {
       IList<Comment> comments = new List<Comment>();
-      string sql = "select c.id, c.content, c.created_at, c.answer_id " +
+      string sql = "select c.id, c.content, c.created_at, c.answer_id, c.user_id " +
         "from answer " +
         "inner join comment c on answer.id = c.answer_id " +
         "where answer.id = @answId";
@@ -33,6 +33,7 @@ namespace GraphOverflow.Dal.Implementation
             while (await reader.ReadAsync())
             {
               var id = (int)reader["id"];
+              var userId = (int)reader["user_id"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
               var questId = (int)reader["answer_id"];
@@ -41,7 +42,8 @@ namespace GraphOverflow.Dal.Implementation
                 Id = id,
                 Content = content,
                 CreatedAt = createdAt,
-                AnswerId = questId
+                AnswerId = questId,
+                UserId = userId
               });
             }
           }

@@ -9,5 +9,6 @@ namespace GraphOverflow.Dtos
     public DateTime CreatedAt { get; set; }
     public long UpVotes { get; set; }
     public int QuestionId { get; set; }
+    public int UserId { get; set; }
   }
 }

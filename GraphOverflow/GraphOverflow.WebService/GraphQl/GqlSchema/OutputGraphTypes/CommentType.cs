@@ -9,12 +9,14 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
   {
     #region Members
     private readonly IAnswerService answerService;
+    private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public CommentType(IAnswerService answerService)
+    public CommentType(IAnswerService answerService, IUserService userService)
     {
       this.answerService = answerService;
+      this.userService = userService;
       InitializeName();
       InitializeFields();
     }
@@ -32,6 +34,8 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<IntGraphType>>("upVotes");
       Field<NonNullGraphType<AnswerType>>(
         name: "answer", resolve: ResolveAnswer);
+      Field<NonNullGraphType<UserGraphType>>(
+        name: "user", resolve: ResolveUser);
 
       Interface<PostInterface>();
     }
@@ -42,6 +46,12 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     {
       var comment = context.Source;
       return answerService.FindAnswerForComment(comment);
+    }
+
+    private object ResolveUser(IResolveFieldContext<CommentDto> context)
+    {
+      var comment = context.Source;
+      return userService.FindUserById(comment.UserId);
     }
     #endregion Resolvers
   }

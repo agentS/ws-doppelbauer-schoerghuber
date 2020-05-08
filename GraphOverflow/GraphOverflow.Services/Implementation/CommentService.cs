@@ -46,7 +46,8 @@ namespace GraphOverflow.Services.Implementation
         Id = comment.Id,
         Content = comment.Content,
         CreatedAt = comment.CreatedAt,
-        AnswerId = comment.AnswerId
+        AnswerId = comment.AnswerId,
+        UserId = comment.UserId
       };
       return dto;
     }

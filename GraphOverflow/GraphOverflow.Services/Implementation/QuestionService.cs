@@ -70,7 +70,8 @@ namespace GraphOverflow.Services.Implementation
         Content = question.Content,
         CreatedAt = question.CreatedAt,
         Title = question.Title,
-        UpVotes = question.UpVotes
+        UpVotes = question.UpVotes,
+        UserId = question.UserId
       };
       return dto;
     }

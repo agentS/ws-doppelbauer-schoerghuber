@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GraphOverflow.Domain
 {
@@ -12,5 +10,6 @@ namespace GraphOverflow.Domain
     public long UpVotes { get; set; }
     public DateTime CreatedAt { get; set; }
     public int? QuestionId { get; set; }
+    public int UserId { get; set; }
   }
 }

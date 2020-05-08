@@ -49,6 +49,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           }
         )
       ).Description = "get all tags that match the %tagName%";
+
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
         name: "latestQuestions",
         resolve: ResolveLatestQuestions
