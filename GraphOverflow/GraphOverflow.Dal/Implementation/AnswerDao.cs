@@ -19,12 +19,18 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<IEnumerable<Answer>> FindQuestionsByTagId(int tagId)
     {
       IList<Answer> tags = new List<Answer>();
-      string sql = "select a.id, a.title, a.content, a.created_at, a.question_id, a.up_votes " +
-        "from tag " +
-        "inner join tag_answer ta on tag.id = ta.tag_id " +
-        "inner join answer a on ta.answer_id = a.id " +
-        "where tag.id = @id and a.question_id IS NULL " +
-        "order by up_votes desc";
+      string sql = @"
+        select a.id, a.title, a.content, a.created_at, a.question_id,
+        count(*) AS up_votes
+        from tag
+        inner join tag_answer ta on tag.id = ta.tag_id
+        inner join answer a on ta.answer_id = a.id
+        inner join answer_up_vote auv on a.id = auv.answer_id
+        where tag.id = @id and a.question_id IS NULL
+        group by a.id, a.title, a.content, a.created_at, a.question_id
+        order by up_votes desc;
+      "; 
+
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -39,7 +45,7 @@ namespace GraphOverflow.Dal.Implementation
               var title = (string)reader["title"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
-              var upVotes = (int)reader["up_votes"];
+              var upVotes = (long)reader["up_votes"];
               tags.Add(new Answer
               {
                 Id = id,
@@ -58,9 +64,15 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<IEnumerable<Answer>> FindAnswersByQuestionId(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, content, question_id, created_at, up_votes from answer " +
-        "where question_id = @questId " +
-        "order by up_votes desc";
+      string sql = @"
+        select id, content, question_id, created_at,
+        count(*) AS up_votes
+        from answer
+        inner join answer_up_vote auv on answer.id = auv.answer_id
+        where question_id = @questId
+        group by id, content, question_id, created_at
+        order by up_votes desc;
+      ";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -74,7 +86,7 @@ namespace GraphOverflow.Dal.Implementation
               var id = (int)reader["id"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
-              var upVotes = (int)reader["up_votes"];
+              var upVotes = (long)reader["up_votes"];
               var questId = (int)reader["question_id"];
               answers.Add(new Answer
               {
@@ -94,7 +106,9 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<Answer> FindAnswerById(int answerId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, content, question_id, created_at, up_votes from answer where id = @id";
+      string sql = "select id, content, question_id, created_at, " +
+        "(select count(*) from answer_up_vote where answer_id = @id) AS up_votes " +
+        "from answer where id = @id";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -108,7 +122,7 @@ namespace GraphOverflow.Dal.Implementation
               var id = (int)reader["id"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
-              var upVotes = (int)reader["up_votes"];
+              var upVotes = (long)reader["up_votes"];
               var questId = (int)reader["question_id"];
               answers.Add(new Answer
               {
@@ -128,7 +142,9 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<Answer> FindQuestionById(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, title, content, question_id, created_at, up_votes from answer where id = @id";
+      string sql = "select id, title, content, question_id, created_at, " +
+        "(select count(*) from answer_up_vote where answer_id = @id) AS up_votes " +
+        "from answer where id = @id";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -143,7 +159,7 @@ namespace GraphOverflow.Dal.Implementation
               var content = (string)reader["content"];
               var title = (string)reader["title"];
               var createdAt = (DateTime)reader["created_at"];
-              var upVotes = (int)reader["up_votes"];
+              var upVotes = (long)reader["up_votes"];
               answers.Add(new Answer
               {
                 Id = id,
@@ -163,7 +179,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       const string STATEMENT = @"
         INSERT INTO answer(title, content, created_at, up_votes)
-        VALUES (@title, @content, @created_at, @up_votes)
+        VALUES (@title, @content, @created_at)
         RETURNING id
       ";
       using (var connection = new NpgsqlConnection(this.connectionString))
@@ -174,7 +190,6 @@ namespace GraphOverflow.Dal.Implementation
           command.Parameters.AddWithValue("title", question.Title);
           command.Parameters.AddWithValue("content", question.Content);
           command.Parameters.AddWithValue("created_at", DateTime.Now);
-          command.Parameters.AddWithValue("up_votes", 0);
 
           int id = ((int) (await command.ExecuteScalarAsync()));
           return id;
@@ -186,7 +201,7 @@ namespace GraphOverflow.Dal.Implementation
     {
       const string STATEMENT = @"
         UPDATE answer
-        SET title = @title, content = @content, up_votes = @up_votes
+        SET title = @title, content = @content
         WHERE id = @id
       ";
       using (var connection = new NpgsqlConnection(this.connectionString))
@@ -196,8 +211,27 @@ namespace GraphOverflow.Dal.Implementation
         {
           command.Parameters.AddWithValue("title", (object)question.Title ?? DBNull.Value);
           command.Parameters.AddWithValue("content", question.Content);
-          command.Parameters.AddWithValue("up_votes", question.UpVoats);
           command.Parameters.AddWithValue("id", question.Id);
+
+          int res = await command.ExecuteNonQueryAsync();
+          return res > 0;
+        }
+      }
+    }
+
+    public async Task<bool> AddUpVoat(Answer question, User user)
+    {
+      const string STATEMENT = @"
+        INSERT INTO answer_up_vote(user_id, answer_id)
+        VALUES (@userId, @answerId)
+      ";
+      using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        using (var command = new NpgsqlCommand(STATEMENT, connection))
+        {
+          command.Parameters.AddWithValue("userId", user.Id);
+          command.Parameters.AddWithValue("answerId", question.Id);
 
           int res = await command.ExecuteNonQueryAsync();
           return res > 0;

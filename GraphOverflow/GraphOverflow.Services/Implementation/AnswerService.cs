@@ -30,13 +30,13 @@ namespace GraphOverflow.Services.Implementation
       return MapAnswer(await answerDao.FindAnswerById(comment.AnswerId));
     }
 
-    public async Task<AnswerDto> UpvoatAnswer(int id)
+    public async Task<AnswerDto> UpvoatAnswer(int answerId, int userId)
     {
-      var answer = await answerDao.FindAnswerById(id);
+      var answer = await answerDao.FindAnswerById(answerId);
       if (answer != null)
       {
-        answer.UpVoats++;
-        await answerDao.Update(answer);
+        await answerDao.AddUpVoat(new Answer { Id = answer.Id }, new User { Id = userId });
+        answer = await answerDao.FindQuestionById(answer.Id); // reload
       }
       return MapAnswer(answer);
     }

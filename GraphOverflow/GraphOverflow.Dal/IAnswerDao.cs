@@ -12,5 +12,6 @@ namespace GraphOverflow.Dal
     Task<Answer> FindQuestionById(int questionId);
     Task<int> CreateQuestion(Answer question);
     Task<bool> Update(Answer question);
+    Task<bool> AddUpVoat(Answer question, User user);
   }
 }

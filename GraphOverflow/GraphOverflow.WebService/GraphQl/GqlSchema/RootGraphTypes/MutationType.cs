@@ -62,6 +62,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" }),
         resolve: ResolveUpvoatQuestion
       );
+      upVoatQuestionField.RequirePermission(USER_PERMISSION);
       upVoatQuestionField.Description = "upVoat question";
 
       var upVoatAnswerField = Field<AnswerType>(
@@ -70,6 +71,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" }),
         resolve: ResolveUpvoatAnswer
       );
+      upVoatAnswerField.RequirePermission(USER_PERMISSION);
       upVoatAnswerField.Description = "upVoat answer";
 
       Field<QuestionType>(
@@ -100,15 +102,17 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 
     private async Task<object> ResolveUpvoatQuestion(IResolveFieldContext<object> context)
     {
+      GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
       int questionId = context.GetArgument<int>("questionId");
-      QuestionDto updatedQuestion = await questionService.UpvoatQuestion(questionId);
+      QuestionDto updatedQuestion = await questionService.UpvoatQuestion(questionId, userContext.User.Id);
       return updatedQuestion;
     }
 
     private async Task<object> ResolveUpvoatAnswer(IResolveFieldContext<object> context)
     {
+      GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
       int answerId = context.GetArgument<int>("answerId");
-      AnswerDto updatedQuestion = await answerService.UpvoatAnswer(answerId);
+      AnswerDto updatedQuestion = await answerService.UpvoatAnswer(answerId, userContext.User.Id);
       return updatedQuestion;
     }
 

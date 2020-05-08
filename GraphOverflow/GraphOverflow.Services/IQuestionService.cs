@@ -10,6 +10,6 @@ namespace GraphOverflow.Services
     Task<IEnumerable<QuestionDto>> FindQuestionsByTagId(int tagId);
     Task<QuestionDto> FindQuestionForAnswer(AnswerDto answer);
     Task<QuestionDto> CreateQuestion(QuestionInputDto question);
-    Task<QuestionDto> UpvoatQuestion(int id);
+    Task<QuestionDto> UpvoatQuestion(int questionId, int userId);
   }
 }

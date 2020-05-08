@@ -36,13 +36,13 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestions(await answerDao.FindQuestionsByTagId(tagId));
     }
 
-    public async Task<QuestionDto> UpvoatQuestion(int id)
+    public async Task<QuestionDto> UpvoatQuestion(int questionId, int userId)
     {
-      var question = await answerDao.FindQuestionById(id);
+      var question = await answerDao.FindQuestionById(questionId);
       if (question != null)
       {
-        question.UpVoats++;
-        await answerDao.Update(question);
+        await answerDao.AddUpVoat(new Answer { Id = question.Id }, new User { Id = userId });
+        question = await answerDao.FindQuestionById(question.Id); // reload
       }
       return MapQuestion(question);
     }
