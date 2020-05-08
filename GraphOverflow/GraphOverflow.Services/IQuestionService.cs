@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GraphOverflow.Dtos.Input;
-using System.Threading.Tasks;
 
 namespace GraphOverflow.Services
 {
@@ -10,7 +9,7 @@ namespace GraphOverflow.Services
   {
     Task<IEnumerable<QuestionDto>> FindQuestionsByTagId(int tagId);
     Task<QuestionDto> FindQuestionForAnswer(AnswerDto answer);
-
     Task<QuestionDto> CreateQuestion(QuestionInputDto question);
+    Task<QuestionDto> UpvoatQuestion(int id);
   }
 }

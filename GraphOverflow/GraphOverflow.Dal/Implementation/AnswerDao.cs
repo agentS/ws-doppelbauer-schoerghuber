@@ -178,5 +178,26 @@ namespace GraphOverflow.Dal.Implementation
         }
       }
     }
+
+    public async Task<bool> UpdateQuestion(Answer question)
+    {
+      const string STATEMENT = @"
+        UPDATE answer
+        SET title = @title, content = @content, up_votes = @up_votes
+      ";
+      using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        using (var command = new NpgsqlCommand(STATEMENT, connection))
+        {
+          command.Parameters.AddWithValue("title", question.Title);
+          command.Parameters.AddWithValue("content", question.Content);
+          command.Parameters.AddWithValue("up_votes", question.UpVoats);
+
+          int res = await command.ExecuteNonQueryAsync();
+          return res > 0;
+        }
+      }
+    }
   }
 }

@@ -10,17 +10,14 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #region Members
     private readonly ITagService tagService;
     private readonly IAnswerService answerService;
-    private readonly ICommentService commentService;
     #endregion Members
 
     #region Construction
     public QuestionType(ITagService tagService,
-      IAnswerService answerService,
-      ICommentService commentService)
+      IAnswerService answerService)
     {
       this.tagService = tagService;
       this.answerService = answerService;
-      this.commentService = commentService;
 
       InitializeName();
       InitializeFields();
@@ -37,13 +34,11 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
       Field<NonNullGraphType<StringGraphType>>("title");
-      Field<NonNullGraphType<IntGraphType>>("upVoats");
+      Field<NonNullGraphType<IntGraphType>>("upVotes");
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
         name: "tags", resolve: ResolveTags);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<AnswerType>>>>(
         name: "answers", resolve: ResolveAnswers);
-      ////Field<NonNullGraphType<ListGraphType<NonNullGraphType<CommentType>>>>(
-      ////  name: "comments", resolve: ResolveComments);
 
       Interface<PostInterface>();
     }
@@ -61,12 +56,6 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       var question = context.Source;
       return answerService.FindAnswersForQuestion(question);
 
-    }
-
-    private object ResolveComments(IResolveFieldContext<QuestionDto> context)
-    {
-      var question = context.Source;
-      return commentService.FindCommentsForQuestion(question);
     }
     #endregion Resolvers
   }

@@ -13,6 +13,10 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 {
   public class MutationType : ObjectGraphType
   {
+    #region Constants
+    private const string USER_PERMISSION = "USER";
+    #endregion Constants
+
     #region Members
     private readonly ITagService tagService;
     private readonly IQuestionService questionService;
@@ -46,8 +50,16 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           new QueryArgument<NonNullGraphType<StringGraphType>>{ Name = "tagName" }),
         resolve: ResolveAddTag
       );
-      addTagField.RequirePermission("USER");
+      addTagField.RequirePermission(USER_PERMISSION);
       addTagField.Description = "adds a graphoverflow tag";
+
+      var upVoatQuestionField = Field<QuestionType>(
+        name: "upVoatQuestion",
+        arguments: new QueryArguments(
+          new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" }),
+        resolve: ResolveUpvoatQuestion
+      );
+      upVoatQuestionField.Description = "upVoat question";
 
       Field<QuestionType>(
         name: "addQuestion",
@@ -65,7 +77,6 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
        resolve: ResolveUserLogin
      ).Description = "user login";
     }
-
     #endregion Construction
 
     #region Resolvers
@@ -74,6 +85,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       var tagName = (string)context.Arguments["tagName"];
       var createdTag = tagService.AddTag(tagName);
       return createdTag;
+    }
+
+    private async Task<object> ResolveUpvoatQuestion(IResolveFieldContext<object> context)
+    {
+      int questionId = context.GetArgument<int>("questionId");
+      QuestionDto updatedQuestion = await questionService.UpvoatQuestion(questionId);
+      return updatedQuestion;
     }
 
     public async Task<object> ResolveAddQuestion(IResolveFieldContext<object> context)

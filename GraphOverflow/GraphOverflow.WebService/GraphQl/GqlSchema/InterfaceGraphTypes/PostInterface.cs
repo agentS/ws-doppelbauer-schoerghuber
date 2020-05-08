@@ -23,7 +23,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes
       Field<NonNullGraphType<IdGraphType>>("id");
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
-      Field<NonNullGraphType<IntGraphType>>("upVoats");
+      Field<NonNullGraphType<IntGraphType>>("upVotes");
     }
     #endregion Construction
   }

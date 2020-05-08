@@ -9,6 +9,5 @@ namespace GraphOverflow.Dtos
     public DateTime CreatedAt { get; set; }
     public string Title { get; set; }
     public int UpVotes { get; set; }
-    // public IEnumerable<TagDto> Tags { get; set; }
   }
 }

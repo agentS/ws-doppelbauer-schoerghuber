@@ -12,8 +12,8 @@ namespace GraphOverflow.WebService.GraphQl.Extensions
 
     public static bool RequiresPermissions(this IProvideMetadata type)
     {
-      var permissions = type.GetMetadata<IEnumerable<string>>(PERMISSIONS_KEY, new List<string>());
-      return permissions.Any();
+      var permissions = type?.GetMetadata<IEnumerable<string>>(PERMISSIONS_KEY, new List<string>());
+      return (permissions != null && permissions.Any());
     }
 
     public static bool CanAccess(this IProvideMetadata type, IEnumerable<string> claims)

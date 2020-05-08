@@ -36,6 +36,17 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestions(await answerDao.FindQuestionsByTagId(tagId));
     }
 
+    public async Task<QuestionDto> UpvoatQuestion(int id)
+    {
+      var question = await answerDao.FindQuestionById(id);
+      if (question != null)
+      {
+        question.UpVoats++;
+        await answerDao.UpdateQuestion(question);
+      }
+      return MapQuestion(question);
+    }
+
     private IEnumerable<QuestionDto> MapQuestions(IEnumerable<Answer> questions)
     {
       IList<QuestionDto> questionDtos = new List<QuestionDto>();
@@ -53,7 +64,8 @@ namespace GraphOverflow.Services.Implementation
         Id = question.Id,
         Content = question.Content,
         CreatedAt = question.CreatedAt,
-        Title = question.Title
+        Title = question.Title,
+        UpVotes = question.UpVoats
       };
       return dto;
     }
