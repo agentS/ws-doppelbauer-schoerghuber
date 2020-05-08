@@ -25,7 +25,7 @@ namespace GraphOverflow.WebService.GraphQl
         userContext.Add(AUTHORIZATION_TOKEN_KEY, token);
 
         AuthenticationService authenticationService = CreateAuthenticationService();
-        var user = authenticationService.GetAuthenticatedUser(token);
+        var user = authenticationService.GetAuthenticatedUser(token).Result;
         if (user != null)
         {
           userContext.Add(USER_ID_KEY, user.Id);

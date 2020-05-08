@@ -59,6 +59,7 @@ namespace GraphOverflow.WebService
       services.AddSingleton<IQuestionService, QuestionService>();
       services.AddSingleton<IAnswerService, AnswerService>();
       services.AddSingleton<ICommentService, CommentService>();
+      services.AddSingleton<IUserService, UserService>();
 
       services.AddSingleton<IValidationRule, RequiresAuthValidationRule>();
 

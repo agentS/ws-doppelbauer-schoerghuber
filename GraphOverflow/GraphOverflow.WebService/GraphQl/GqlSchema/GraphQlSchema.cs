@@ -11,10 +11,11 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema
       IQuestionService questionService, 
       IAuthenticationService authenticationService,
       IAnswerService answerService,
-      IServiceProvider provider) 
+      IServiceProvider provider,
+      IUserService userService) 
       : base(provider)
     {
-      Query = new QueryType(tagService);
+      Query = new QueryType(tagService, userService);
       Mutation = new MutationType(tagService, questionService, answerService, authenticationService);
       Subscription = new SubscriptionType(tagService);
     }

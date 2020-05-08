@@ -7,7 +7,7 @@ namespace GraphOverflow.Services
   public interface IAuthenticationService
   {
     Task<AuthPayloadDto> Authenticate(UserLoginInputDto userLogin);
-    UserDto GetAuthenticatedUser(string token);
+    Task<UserDto> GetAuthenticatedUser(string token);
     bool ValidateToken(string token);
 
   }

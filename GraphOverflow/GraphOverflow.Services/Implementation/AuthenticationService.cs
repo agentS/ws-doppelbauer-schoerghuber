@@ -52,12 +52,13 @@ namespace GraphOverflow.Services.Implementation
       }
     }
 
-    public UserDto GetAuthenticatedUser(string token)
+    public async Task<UserDto> GetAuthenticatedUser(string token)
     {
       if (token != null && ValidateToken(token))
       {
         int id = int.Parse(GetClaim(token, CLAIM_TYPE_NAME));
-        return new UserDto { Id = id, Claims = new List<string> { "USER" } };
+        User user = await userDao.FindById(id);
+        return new UserDto { Id = user.Id, Name = user.Name, Claims = new List<string> { "USER" } };
       }
       else
       {

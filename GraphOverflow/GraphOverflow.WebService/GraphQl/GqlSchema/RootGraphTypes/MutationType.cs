@@ -3,6 +3,7 @@ using GraphOverflow.Dtos;
 using GraphOverflow.Dtos.Input;
 using GraphOverflow.GraphQl.InputGraphTypes;
 using GraphOverflow.Services;
+using GraphOverflow.WebService.Constants;
 using GraphOverflow.WebService.GraphQl.Extensions;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InputGraphTypes;
 using GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes;
@@ -13,10 +14,6 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 {
   public class MutationType : ObjectGraphType
   {
-    #region Constants
-    private const string USER_PERMISSION = "USER";
-    #endregion Constants
-
     #region Members
     private readonly ITagService tagService;
     private readonly IQuestionService questionService;
@@ -53,7 +50,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           new QueryArgument<NonNullGraphType<StringGraphType>>{ Name = "tagName" }),
         resolve: ResolveAddTag
       );
-      addTagField.RequirePermission(USER_PERMISSION);
+      addTagField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       addTagField.Description = "adds a graphoverflow tag";
 
       var upVoatQuestionField = Field<QuestionType>(
@@ -62,7 +59,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" }),
         resolve: ResolveUpvoatQuestion
       );
-      upVoatQuestionField.RequirePermission(USER_PERMISSION);
+      upVoatQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       upVoatQuestionField.Description = "upVoat question";
 
       var upVoatAnswerField = Field<AnswerType>(
@@ -71,7 +68,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" }),
         resolve: ResolveUpvoatAnswer
       );
-      upVoatAnswerField.RequirePermission(USER_PERMISSION);
+      upVoatAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       upVoatAnswerField.Description = "upVoat answer";
 
       Field<QuestionType>(

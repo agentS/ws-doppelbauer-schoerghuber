@@ -1,6 +1,9 @@
 ﻿using GraphOverflow.Services;
+using GraphOverflow.WebService.Constants;
+using GraphOverflow.WebService.GraphQl.Extensions;
 using GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes;
 using GraphQL.Types;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 {
@@ -8,11 +11,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
   {
     #region Members
     private readonly ITagService tagService;
+    private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public QueryType(ITagService tagService)
+    public QueryType(ITagService tagService, IUserService userService)
     {
+      this.userService = userService;
       this.tagService = tagService;
       InitializeTypeName();
       InitializeFields();
@@ -25,12 +30,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 
     private void InitializeFields()
     {
-      Field<StringGraphType>(name: "hello", resolve: ResolveHello);
-      Field<StringGraphType>(name: "name", resolve: ResolveName);
-      Field<IntGraphType>(name: "userId", resolve: ResolveUserId);
+      var meField = Field<UserGraphType>(name: "me", resolve: ResolveUser);
+      meField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
         name: "allTags", resolve: ResolveAllTags
       );
+
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
         name: "tags",
         resolve: ResolveTags,
@@ -45,14 +51,12 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     #endregion Construction
 
     #region Resolvers
-    public object ResolveHello(IResolveFieldContext<object> context) => "hello";
 
-    public object ResolveName(IResolveFieldContext<object> context) => "Alex";
-
-    public object ResolveUserId(IResolveFieldContext<object> context)
+    public async Task<object> ResolveUser(IResolveFieldContext<object> context)
     {
       GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
-      return userContext.User?.Id;
+      var userId = userContext.User.Id;
+      return await userService.FindUserById(userId);
     }
 
     public object ResolveAllTags(IResolveFieldContext<object> context)
