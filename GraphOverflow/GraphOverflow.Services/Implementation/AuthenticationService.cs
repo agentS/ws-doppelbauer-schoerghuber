@@ -1,4 +1,5 @@
-﻿using GraphOverflow.Domain;
+﻿using GraphOverflow.Dal;
+using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using GraphOverflow.Dtos.Input;
 using Microsoft.IdentityModel.Tokens;
@@ -8,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
 {
@@ -17,16 +19,19 @@ namespace GraphOverflow.Services.Implementation
     private const string TOKEN_SECRET = 
       "THIS IS USED TO SIGN AND VERIFY JWT TOKENS, REPLACE IT WITH YOUR OWN SECRET, IT CAN BE ANY STRING";
 
-    public AuthenticationService()
+    private IUserDao userDao;
+
+    public AuthenticationService(IUserDao userDao)
     {
+      this.userDao = userDao;
     }
 
-    public AuthPayloadDto Authenticate(UserLoginInputDto userLogin)
+    public async Task<AuthPayloadDto> Authenticate(UserLoginInputDto userLogin)
     {
       try
       {
         // User user = await userDao.GetByEmail(userLogin.Email);
-        User user = new User { Id = 1, Name = "alex", PasswordHash = "xyz" };
+        User user = await userDao.FindByName(userLogin.UserName);
         if (user == null)
         {
           return null;

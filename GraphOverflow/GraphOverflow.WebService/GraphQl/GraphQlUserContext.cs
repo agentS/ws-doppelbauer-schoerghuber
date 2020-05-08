@@ -1,4 +1,5 @@
-﻿using GraphOverflow.Dtos;
+﻿using GraphOverflow.Dal.Implementation;
+using GraphOverflow.Dtos;
 using GraphOverflow.Services.Implementation;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -23,7 +24,7 @@ namespace GraphOverflow.WebService.GraphQl
         var token = httpcontext.Request.Headers[AUTORICATION_HEADER];
         userContext.Add(AUTHORIZATION_TOKEN_KEY, token);
 
-        AuthenticationService authenticationService = new AuthenticationService();
+        AuthenticationService authenticationService = CreateAuthenticationService();
         var user = authenticationService.GetAuthenticatedUser(token);
         if (user != null)
         {
@@ -32,6 +33,11 @@ namespace GraphOverflow.WebService.GraphQl
         }
       }
       return userContext;
+    }
+
+    private static AuthenticationService CreateAuthenticationService()
+    {
+      return new AuthenticationService(new UserDao("Host=localhost;Username=postgres;Password=postgres;Database=graphoverflow"));
     }
 
     public UserDto User { get; set; }

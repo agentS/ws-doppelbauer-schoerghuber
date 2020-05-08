@@ -51,6 +51,7 @@ namespace GraphOverflow.WebService
 
       // define services
       services.AddSingleton<ITagDao, TagDao>(factory => new TagDao(connectionString));
+      services.AddSingleton<IUserDao, UserDao>(factory => new UserDao(connectionString));
       services.AddSingleton<IAnswerDao, AnswerDao>(factory => new AnswerDao(connectionString));
       services.AddSingleton<ICommentDao, CommentDao>(factory => new CommentDao(connectionString));
       services.AddSingleton<IAuthenticationService, AuthenticationService>();
