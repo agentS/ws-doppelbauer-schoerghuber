@@ -16,6 +16,44 @@ namespace GraphOverflow.Dal.Implementation
       this.connectionString = connectionString;
     }
 
+    public async Task<IEnumerable<Answer>> FindLatestQuestions()
+    {
+      const string QUERY = @"
+        SELECT id, title, content, created_at, up_votes FROM answer
+        WHERE question_id IS NULL
+        ORDER BY created_at DESC
+      ";
+      await using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        await using (var command = new NpgsqlCommand(QUERY, connection))
+        {
+          await using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+          {
+            IList<Answer> questions = new List<Answer>();
+            while (await reader.ReadAsync())
+            {
+              var id = (int)reader["id"];
+              var title = (string)reader["title"];
+              var content = (string)reader["content"];
+              var createdAt = (DateTime)reader["created_at"];
+              var upVotes = (int)reader["up_votes"];
+              questions.Add(new Answer()
+              {
+                Id = id,
+                Title = title,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVotes = upVotes
+              });
+            }
+
+            return questions;
+          }
+        }
+      }
+    }
+
     public async Task<IEnumerable<Answer>> FindQuestionsByTagId(int tagId)
     {
       IList<Answer> tags = new List<Answer>();
@@ -45,7 +83,7 @@ namespace GraphOverflow.Dal.Implementation
                 Title = title,
                 Content = content,
                 CreatedAt = createdAt,
-                UpVoats = upVotes
+                UpVotes = upVotes
               });
             }
           }
@@ -78,7 +116,7 @@ namespace GraphOverflow.Dal.Implementation
                 Id = id,
                 Content = content,
                 CreatedAt = createdAt,
-                UpVoats = upVotes,
+                UpVotes = upVotes,
                 QuestionId = questId
               });
             }
@@ -112,7 +150,7 @@ namespace GraphOverflow.Dal.Implementation
                 Id = id,
                 Content = content,
                 CreatedAt = createdAt,
-                UpVoats = upVotes,
+                UpVotes = upVotes,
                 QuestionId = questId,
               });
             }
@@ -146,7 +184,7 @@ namespace GraphOverflow.Dal.Implementation
                 Id = id,
                 Content = content,
                 CreatedAt = createdAt,
-                UpVoats = upVotes,
+                UpVotes = upVotes,
                 Title = title
               });
             }
