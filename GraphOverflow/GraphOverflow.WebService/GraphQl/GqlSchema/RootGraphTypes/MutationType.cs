@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using GraphOverflow.Dtos;
 using GraphOverflow.Dtos.Input;
 using GraphOverflow.GraphQl.InputGraphTypes;
@@ -55,7 +54,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
         resolve: ResolveAddQuestion
       ).Description = "adds a question";
 
-      Field<AuthPayloadgraphType>(
+      Field<AuthPayloadGraphType>(
        name: "login",
        arguments: new QueryArguments(
          new QueryArgument<NonNullGraphType<UserLoginInputGraphType>> { Name = "loginData" }

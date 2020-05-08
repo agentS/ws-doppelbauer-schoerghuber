@@ -3,10 +3,10 @@ using GraphQL.Types;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
-  public class AuthPayloadgraphType : ObjectGraphType<AuthPayloadDto>
+  public class AuthPayloadGraphType : ObjectGraphType<AuthPayloadDto>
   {
     #region Construction
-    public AuthPayloadgraphType()
+    public AuthPayloadGraphType()
     {
       InitializeName();
       InitializeFields();
