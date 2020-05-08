@@ -4,9 +4,11 @@ using GraphOverflow.Services;
 using GraphOverflow.Services.Implementation;
 using GraphOverflow.WebService.GraphQl;
 using GraphOverflow.WebService.GraphQl.GqlSchema;
+using GraphOverflow.WebService.GraphQl.ValidationRules;
 using GraphQL.Server;
 using GraphQL.Server.Ui.GraphiQL;
 using GraphQL.Server.Ui.Playground;
+using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -56,6 +58,9 @@ namespace GraphOverflow.WebService
       services.AddSingleton<IQuestionService, QuestionService>();
       services.AddSingleton<IAnswerService, AnswerService>();
       services.AddSingleton<ICommentService, CommentService>();
+
+      services.AddSingleton<IValidationRule, RequiresAuthValidationRule>();
+
 
       //define schema types
       //services.AddSingleton<TagType>();

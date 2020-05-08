@@ -3,6 +3,7 @@ using GraphOverflow.Dtos;
 using GraphOverflow.Dtos.Input;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -34,7 +35,7 @@ namespace GraphOverflow.Services.Implementation
         {
           return new AuthPayloadDto
           {
-            User = new UserDto { Id = user.Id, Name = user.Name },
+            User = new UserDto { Id = user.Id, Name = user.Name, Claims = new List<string>{ "USER" } },
             Token = GetJwtToken(user)
           };
         }
@@ -51,7 +52,7 @@ namespace GraphOverflow.Services.Implementation
       if (token != null && ValidateToken(token))
       {
         int id = int.Parse(GetClaim(token, CLAIM_TYPE_NAME));
-        return new UserDto { Id = id };
+        return new UserDto { Id = id, Claims = new List<string> { "USER" } };
       }
       else
       {

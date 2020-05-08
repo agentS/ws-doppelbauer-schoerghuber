@@ -3,6 +3,7 @@ using GraphOverflow.Dtos;
 using GraphOverflow.Dtos.Input;
 using GraphOverflow.GraphQl.InputGraphTypes;
 using GraphOverflow.Services;
+using GraphOverflow.WebService.GraphQl.Extensions;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InputGraphTypes;
 using GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes;
 using GraphQL;
@@ -39,17 +40,19 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 
     private void InitializeFields()
     {
-      Field<TagType>(
+      var addTagField = Field<TagType>(
         name: "addTag",
         arguments: new QueryArguments(
           new QueryArgument<NonNullGraphType<StringGraphType>>{ Name = "tagName" }),
         resolve: ResolveAddTag
-      ).Description = "adds a graphoverflow tag";
+      );
+      addTagField.RequirePermission("USER");
+      addTagField.Description = "adds a graphoverflow tag";
 
       Field<QuestionType>(
         name: "addQuestion",
         arguments: new QueryArguments(
-          new QueryArgument<NonNullGraphType<QuestionInputGraphType>> {Name = "question"}
+          new QueryArgument<NonNullGraphType<QuestionInputGraphType>> { Name = "question" }
         ),
         resolve: ResolveAddQuestion
       ).Description = "adds a question";

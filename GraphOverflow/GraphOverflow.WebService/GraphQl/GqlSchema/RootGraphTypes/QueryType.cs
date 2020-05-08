@@ -52,11 +52,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     public object ResolveUserId(IResolveFieldContext<object> context)
     {
       GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
-      if (userContext.IsUserAuthenticated())
-      {
-        return userContext.GetIdOfAuthenticatedUser();
-      }
-      return null;
+      return userContext.User?.Id;
     }
 
     public object ResolveAllTags(IResolveFieldContext<object> context)

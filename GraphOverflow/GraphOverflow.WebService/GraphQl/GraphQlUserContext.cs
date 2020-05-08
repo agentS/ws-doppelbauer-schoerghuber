@@ -1,4 +1,5 @@
-﻿using GraphOverflow.Services.Implementation;
+﻿using GraphOverflow.Dtos;
+using GraphOverflow.Services.Implementation;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
@@ -27,10 +28,13 @@ namespace GraphOverflow.WebService.GraphQl
         if (user != null)
         {
           userContext.Add(USER_ID_KEY, user.Id);
+          userContext.User = user;
         }
       }
       return userContext;
     }
+
+    public UserDto User { get; set; }
 
     public bool IsUserAuthenticated()
     {
