@@ -1,15 +1,18 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
-import GraphQlDemo from "./GraphQlDemo";
+import { Route } from "react-router-dom";
+
+import QuestionsList from "./frontpage/QuestionsList";
 
 function App() {
+  const questionsList = () => (<QuestionsList />);
+
   return (
     <div className="App">
       <header className="App-header">
-        <h1>GraphQL Demo</h1>
-        <GraphQlDemo />
+        <Route exact path="/" component={questionsList} />
+        <Route exact path="/questions" component={questionsList} />
       </header>
     </div>
   );

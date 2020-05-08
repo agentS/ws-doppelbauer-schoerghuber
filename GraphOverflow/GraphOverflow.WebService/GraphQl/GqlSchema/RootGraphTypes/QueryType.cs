@@ -1,9 +1,9 @@
-﻿using GraphOverflow.Services;
+using GraphOverflow.Services;
 using GraphOverflow.WebService.Constants;
 using GraphOverflow.WebService.GraphQl.Extensions;
+using System.Threading.Tasks;
 using GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes;
 using GraphQL.Types;
-using System.Threading.Tasks;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 {
@@ -11,14 +11,16 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
   {
     #region Members
     private readonly ITagService tagService;
+    private readonly IQuestionService questionService;
     private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public QueryType(ITagService tagService, IUserService userService)
+    public QueryType(ITagService tagService, IQuestionService questionService, IUserService userService)
     {
       this.userService = userService;
       this.tagService = tagService;
+      this.questionService = questionService;
       InitializeTypeName();
       InitializeFields();
     }
@@ -47,6 +49,10 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
           }
         )
       ).Description = "get all tags that match the %tagName%";
+      Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
+        name: "latestQuestions",
+        resolve: ResolveLatestQuestions
+      );
     }
     #endregion Construction
 
@@ -68,6 +74,11 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     {
       var tagName = context.Arguments["tagName"] as string;
       return tagService.FindAllTagsByName(tagName);
+    }
+
+    private async Task<object> ResolveLatestQuestions(IResolveFieldContext<object> context)
+    {
+      return await questionService.FindLatestQuestions();
     }
     #endregion Resolvers
   }

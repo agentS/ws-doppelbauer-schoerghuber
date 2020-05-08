@@ -31,6 +31,11 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestion(await answerDao.FindQuestionById(questionId));
     }
 
+    public async Task<IEnumerable<QuestionDto>> FindLatestQuestions()
+    {
+      return MapQuestions(await answerDao.FindLatestQuestions());
+    }
+
     public async Task<IEnumerable<QuestionDto>> FindQuestionsByTagId(int tagId)
     {
       return MapQuestions(await answerDao.FindQuestionsByTagId(tagId));
@@ -65,7 +70,7 @@ namespace GraphOverflow.Services.Implementation
         Content = question.Content,
         CreatedAt = question.CreatedAt,
         Title = question.Title,
-        UpVotes = question.UpVoats
+        UpVotes = question.UpVotes
       };
       return dto;
     }

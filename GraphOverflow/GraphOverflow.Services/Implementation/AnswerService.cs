@@ -58,7 +58,7 @@ namespace GraphOverflow.Services.Implementation
         Id = answer.Id,
         Content = answer.Content,
         CreatedAt = answer.CreatedAt,
-        UpVotes = answer.UpVoats,
+        UpVotes = answer.UpVotes,
         QuestionId = answer.QuestionId.Value
       };
       return dto;

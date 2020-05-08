@@ -15,7 +15,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema
       IUserService userService) 
       : base(provider)
     {
-      Query = new QueryType(tagService, userService);
+      Query = new QueryType(tagService, questionService, userService);
       Mutation = new MutationType(tagService, questionService, answerService, authenticationService);
       Subscription = new SubscriptionType(tagService);
     }

@@ -6,6 +6,7 @@ namespace GraphOverflow.Dal
 {
   public interface IAnswerDao
   {
+    Task<IEnumerable<Answer>> FindLatestQuestions();
     Task<IEnumerable<Answer>> FindQuestionsByTagId(int tagId);
     Task<IEnumerable<Answer>> FindAnswersByQuestionId(int questionId);
     Task<Answer> FindAnswerById(int answerId);
