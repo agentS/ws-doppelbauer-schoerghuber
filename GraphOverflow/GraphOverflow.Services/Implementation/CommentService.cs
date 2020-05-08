@@ -51,5 +51,12 @@ namespace GraphOverflow.Services.Implementation
       };
       return dto;
     }
+
+    public async Task<CommentDto> CreateComment(string content, int answerId, int userId)
+    {
+      int commentId = await commentDao.CreateComment(content, answerId, userId);
+      Comment comment = await commentDao.FindCommentsById(commentId);
+      return MapComment(comment);
+    }
   }
 }

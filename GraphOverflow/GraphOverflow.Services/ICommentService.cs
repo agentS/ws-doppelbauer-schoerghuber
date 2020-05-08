@@ -8,5 +8,6 @@ namespace GraphOverflow.Services
   {
     Task<IEnumerable<CommentDto>> FindCommentsForAnswer(AnswerDto answer);
     Task<IEnumerable<CommentDto>> FindCommentsForQuestion(QuestionDto question);
+    Task<CommentDto> CreateComment(string content, int answerId, int id);
   }
 }

@@ -20,6 +20,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     private readonly IQuestionService questionService;
     private readonly IAnswerService answerService;
     private readonly IAuthenticationService authenticationService;
+    private readonly ICommentService commentService;
     #endregion Members
 
     #region Construction
@@ -27,13 +28,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       ITagService tagService,
       IQuestionService questionService,
       IAnswerService answerService,
-      IAuthenticationService authenticationService
+      IAuthenticationService authenticationService,
+      ICommentService commentService
     )
     {
       this.tagService = tagService;
       this.questionService = questionService;
       this.answerService = answerService;
       this.authenticationService = authenticationService;
+      this.commentService = commentService;
       InitializeTypeName();
       InitializeFields();
     }
@@ -82,16 +85,27 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       addQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       addQuestionField.Description = "adds a question";
 
-      var addAnswerField = Field<AnswerType>(
-        name: "addAnswer",
+      var answerQuestionField = Field<AnswerType>(
+        name: "answerQuestion",
         arguments: new QueryArguments(
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" },
           new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "content" }
         ),
         resolve: ResolveAddAnswer
       );
-      addAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
-      addAnswerField.Description = "adds an answer";
+      answerQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      answerQuestionField.Description = "adds an answer";
+
+      var commentAnswerField = Field<CommentType>(
+        name: "commentAnswer",
+        arguments: new QueryArguments(
+          new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" },
+          new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "content" }
+        ),
+        resolve: ResolveAddComment
+      );
+      commentAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      commentAnswerField.Description = "adds a comment";
 
       Field<AuthPayloadGraphType>(
        name: "login",
@@ -150,6 +164,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       AnswerDto answer = await answerService.CreateAnswer(content, questionId, userContext.User.Id);
       return answer;
 
+    }
+
+    private async Task<object> ResolveAddComment(IResolveFieldContext<object> context)
+    {
+      GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+      var answerId = context.GetArgument<int>("answerId");
+      var content = context.GetArgument<string>("content");
+      CommentDto comment = await commentService.CreateComment(content, answerId, userContext.User.Id);
+      return comment;
     }
     #endregion Resolvers
   }
