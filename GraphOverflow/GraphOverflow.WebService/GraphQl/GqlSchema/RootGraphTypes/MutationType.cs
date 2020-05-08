@@ -71,13 +71,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       upVoatAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       upVoatAnswerField.Description = "upVoat answer";
 
-      Field<QuestionType>(
+      var addQuestionField = Field<QuestionType>(
         name: "addQuestion",
         arguments: new QueryArguments(
           new QueryArgument<NonNullGraphType<QuestionInputGraphType>> { Name = "question" }
         ),
         resolve: ResolveAddQuestion
-      ).Description = "adds a question";
+      );
+      addQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      addQuestionField.Description = "adds a question";
 
       Field<AuthPayloadGraphType>(
        name: "login",
@@ -115,8 +117,9 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 
     public async Task<object> ResolveAddQuestion(IResolveFieldContext<object> context)
     {
+      GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
       QuestionInputDto question = context.GetArgument<QuestionInputDto>("question");
-      QuestionDto createdQuestion = await questionService.CreateQuestion(question);
+      QuestionDto createdQuestion = await questionService.CreateQuestion(question, userContext.User.Id);
       return createdQuestion;
     }
 

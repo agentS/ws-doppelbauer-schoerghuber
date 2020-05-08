@@ -20,14 +20,14 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestion(await answerDao.FindQuestionById(answer.QuestionId));
     }
 
-    public async Task<QuestionDto> CreateQuestion(QuestionInputDto questionDto)
+    public async Task<QuestionDto> CreateQuestion(QuestionInputDto questionDto, int userId)
     {
       var question = new Answer()
       {
         Title =  questionDto.Title,
         Content = questionDto.Content,
       };
-      int questionId = await answerDao.CreateQuestion(question);
+      int questionId = await answerDao.CreateQuestion(question, new User { Id = userId });
       return MapQuestion(await answerDao.FindQuestionById(questionId));
     }
 

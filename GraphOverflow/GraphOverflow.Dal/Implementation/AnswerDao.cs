@@ -213,11 +213,11 @@ namespace GraphOverflow.Dal.Implementation
       return answers.FirstOrDefault();
     }
 
-    public async Task<int> CreateQuestion(Answer question)
+    public async Task<int> CreateQuestion(Answer question, User user)
     {
       const string STATEMENT = @"
-        INSERT INTO answer(title, content, created_at, up_votes)
-        VALUES (@title, @content, @created_at)
+        INSERT INTO answer(title, content, created_at, user_id)
+        VALUES (@title, @content, @created_at, @user_id)
         RETURNING id
       ";
       using (var connection = new NpgsqlConnection(this.connectionString))
@@ -228,6 +228,7 @@ namespace GraphOverflow.Dal.Implementation
           command.Parameters.AddWithValue("title", question.Title);
           command.Parameters.AddWithValue("content", question.Content);
           command.Parameters.AddWithValue("created_at", DateTime.Now);
+          command.Parameters.AddWithValue("user_id", user.Id);
 
           int id = ((int) (await command.ExecuteScalarAsync()));
           return id;
