@@ -9,11 +9,9 @@ function App() {
   const questionsList = () => (<QuestionsList />);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <Route exact path="/" component={questionsList} />
-        <Route exact path="/questions" component={questionsList} />
-      </header>
+    <div className="container">
+      <Route exact path="/" component={questionsList} />
+      <Route exact path="/questions" component={questionsList} />
     </div>
   );
 }

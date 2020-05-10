@@ -1,4 +1,5 @@
 import React, { Fragment } from "react";
+import { Accordion } from "react-bootstrap";
 
 import { useQuery } from "@apollo/react-hooks";
 import gql from "graphql-tag";
@@ -39,9 +40,12 @@ const QuestionsList: React.FC<QuestionsListProperties> = () => {
 	return (
 		<div>
 			<h1>Latest Questions</h1>
-			{data.latestQuestions.map((question: Question) => (
-				<QuestionDisplay question={question} />
-			))}
+			<Accordion>
+				{data.latestQuestions.map((question: Question) => (
+					<QuestionDisplay question={question} />
+				))}
+			</Accordion>
+			
 		</div>
 	)
 };
