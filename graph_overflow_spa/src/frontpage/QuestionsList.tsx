@@ -1,5 +1,5 @@
 import React from "react";
-import { Accordion, Button, Card, Col, Row } from "react-bootstrap";
+import { ListGroup, Col, Row } from "react-bootstrap";
 
 import { LatestQuestionsComponent } from "../graphql/GraphQlTypes";
 
@@ -20,25 +20,18 @@ const QuestionsList: React.FC<QuestionsListProperties> = () => {
 					}
 
 					return (
-						<Accordion>
+						<ListGroup>
 							{data.latestQuestions.map(question => (
-								<Card key={question.id}>
-									<Card.Header>
-										<Accordion.Toggle as={Button} variant="link" eventKey={question.id}>
-											<Row>
-												<Col xs={6}>{question.upVotes} Upvote(s)</Col>
-												<Col>{question.title}</Col>
-											</Row>
-										</Accordion.Toggle>
-									</Card.Header>
-									<Accordion.Collapse eventKey={question.id}>
-										<Card.Body>
-											{question.content}
-										</Card.Body>
-									</Accordion.Collapse>
-								</Card>
+								<ListGroup.Item key={question.id}
+									action href={`/question/${question.id}`}
+								>
+									<Row>
+										<Col xs={2}>{question.upVotes} Upvotes</Col>
+										<Col>{question.title}</Col>
+									</Row>
+								</ListGroup.Item>
 							))}
-						</Accordion>
+						</ListGroup>
 					);
 				}}
 			</LatestQuestionsComponent>

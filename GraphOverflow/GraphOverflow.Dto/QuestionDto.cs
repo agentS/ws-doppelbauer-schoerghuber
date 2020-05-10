@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace GraphOverflow.Dtos
 {
@@ -10,5 +11,11 @@ namespace GraphOverflow.Dtos
     public string Title { get; set; }
     public long UpVotes { get; set; }
     public int UserId { get; set; }
+    public IList<AnswerDto> Answers { get; set; }
+
+    public QuestionDto()
+    {
+      this.Answers = new List<AnswerDto>();
+    }
   }
 }

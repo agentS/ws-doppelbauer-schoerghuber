@@ -31,6 +31,7 @@ class PostAnswer extends React.Component<PostAnswerProperties, PostAnswerState> 
                     {mutate => (
                         <Form onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
                             event.preventDefault();
+                            
                             mutate({ variables: {
                                 questionId: this.props.questionId,
                                 content: this.state.answer,

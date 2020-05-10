@@ -95,6 +95,7 @@ export type Question = PostInterface & {
   tags: Array<Tag>;
   title: Scalars['String'];
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
   user: User;
 };
 
@@ -106,6 +107,7 @@ export type Answer = PostInterface & {
   id: Scalars['ID'];
   question: Question;
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
   user: User;
 };
 
@@ -116,6 +118,7 @@ export type Comment = PostInterface & {
   createdAt: Scalars['DateTime'];
   id: Scalars['ID'];
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
   user: User;
 };
 
@@ -124,6 +127,7 @@ export type PostInterface = {
   createdAt: Scalars['DateTime'];
   id: Scalars['ID'];
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
 };
 
 export type Mutation = {
@@ -257,10 +261,7 @@ export type FetchQuestionQuery = (
     & { user: (
       { __typename?: 'User' }
       & Pick<User, 'name'>
-    ), tags: Array<(
-      { __typename?: 'Tag' }
-      & Pick<Tag, 'id' | 'name'>
-    )>, answers: Array<(
+    ), answers: Array<(
       { __typename?: 'Answer' }
       & Pick<Answer, 'id' | 'content' | 'createdAt' | 'upVotes'>
       & { user: (
@@ -285,7 +286,25 @@ export type LatestQuestionsQuery = (
   { __typename?: 'Query' }
   & { latestQuestions: Array<(
     { __typename?: 'Question' }
-    & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
+    & Pick<Question, 'id' | 'title' | 'upVotes'>
+  )> }
+);
+
+export type PostCommentMutationVariables = {
+  answerId: Scalars['Int'];
+  content: Scalars['String'];
+};
+
+
+export type PostCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { commentAnswer?: Maybe<(
+    { __typename?: 'Comment' }
+    & Pick<Comment, 'id' | 'content' | 'createdAt'>
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    ) }
   )> }
 );
 
@@ -388,10 +407,6 @@ export const FetchQuestionDocument = gql`
     user {
       name
     }
-    tags {
-      id
-      name
-    }
     answers {
       id
       content
@@ -440,8 +455,6 @@ export const LatestQuestionsDocument = gql`
   latestQuestions {
     id
     title
-    content
-    createdAt
     upVotes
   }
 }
@@ -466,3 +479,38 @@ export function withLatestQuestions<TProps, TChildProps = {}, TDataName extends 
     });
 };
 export type LatestQuestionsQueryResult = ApolloReactCommon.QueryResult<LatestQuestionsQuery, LatestQuestionsQueryVariables>;
+export const PostCommentDocument = gql`
+    mutation postComment($answerId: Int!, $content: String!) {
+  commentAnswer(answerId: $answerId, content: $content) {
+    id
+    content
+    createdAt
+    user {
+      id
+      name
+    }
+  }
+}
+    `;
+export type PostCommentMutationFn = ApolloReactCommon.MutationFunction<PostCommentMutation, PostCommentMutationVariables>;
+export type PostCommentComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<PostCommentMutation, PostCommentMutationVariables>, 'mutation'>;
+
+    export const PostCommentComponent = (props: PostCommentComponentProps) => (
+      <ApolloReactComponents.Mutation<PostCommentMutation, PostCommentMutationVariables> mutation={PostCommentDocument} {...props} />
+    );
+    
+export type PostCommentProps<TChildProps = {}, TDataName extends string = 'mutate'> = {
+      [key in TDataName]: ApolloReactCommon.MutationFunction<PostCommentMutation, PostCommentMutationVariables>
+    } & TChildProps;
+export function withPostComment<TProps, TChildProps = {}, TDataName extends string = 'mutate'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  PostCommentMutation,
+  PostCommentMutationVariables,
+  PostCommentProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withMutation<TProps, PostCommentMutation, PostCommentMutationVariables, PostCommentProps<TChildProps, TDataName>>(PostCommentDocument, {
+      alias: 'postComment',
+      ...operationOptions
+    });
+};
+export type PostCommentMutationResult = ApolloReactCommon.MutationResult<PostCommentMutation>;
+export type PostCommentMutationOptions = ApolloReactCommon.BaseMutationOptions<PostCommentMutation, PostCommentMutationVariables>;
