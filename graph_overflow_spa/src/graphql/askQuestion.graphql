@@ -1,0 +1,5 @@
+mutation askQuestion($title: String!, $content: String!) {
+  askQuestion(question: { title: $title, content: $content }) {
+    id
+  }
+}

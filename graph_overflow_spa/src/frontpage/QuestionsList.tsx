@@ -1,51 +1,47 @@
-import React, { Fragment } from "react";
-import { Accordion } from "react-bootstrap";
+import React from "react";
+import { Accordion, Button, Card, Col, Row } from "react-bootstrap";
 
-import { useQuery } from "@apollo/react-hooks";
-import gql from "graphql-tag";
-
-import { Question } from "../graphql/GraphQlSchemaTypes";
-
-import QuestionDisplay from "./QuestionDisplay";
+import { LatestQuestionsComponent } from "../graphql/GraphQlTypes";
 
 interface QuestionsListProperties {}
 
 const QuestionsList: React.FC<QuestionsListProperties> = () => {
-	const {
-		data,
-		loading,
-		error
-	} = useQuery(gql`
-		query latestQuestions{
-			latestQuestions {
-				id
-				title
-				content
-				createdAt
-				upVotes
-			}
-		}
-	`);
-
-	if (loading) {
-		return (<h1>Fetching latest questions</h1>);
-	}
-	if (error) {
-		return (<h1>An error occured on fetching the latest questions</h1>);
-	}
-	if (!data) {
-		return (<h1>Not found</h1>);
-	}
-
 	return (
 		<div>
 			<h1>Latest Questions</h1>
-			<Accordion>
-				{data.latestQuestions.map((question: Question) => (
-					<QuestionDisplay question={question} />
-				))}
-			</Accordion>
-			
+			<LatestQuestionsComponent>
+				{({ loading, error, data }) => {
+					if (loading) {
+						return (<h3>Loading questions...</h3>);
+					}
+
+					if (error || !data) {
+						return (<h3>An error occured while loading the questions</h3>);
+					}
+
+					return (
+						<Accordion>
+							{data.latestQuestions.map(question => (
+								<Card key={question.id}>
+									<Card.Header>
+										<Accordion.Toggle as={Button} variant="link" eventKey={question.id}>
+											<Row>
+												<Col xs={6}>{question.upVotes} Upvote(s)</Col>
+												<Col>{question.title}</Col>
+											</Row>
+										</Accordion.Toggle>
+									</Card.Header>
+									<Accordion.Collapse eventKey={question.id}>
+										<Card.Body>
+											{question.content}
+										</Card.Body>
+									</Accordion.Collapse>
+								</Card>
+							))}
+						</Accordion>
+					);
+				}}
+			</LatestQuestionsComponent>
 		</div>
 	)
 };

@@ -37,7 +37,7 @@ namespace GraphOverflow.WebService.GraphQl
 
     private static AuthenticationService CreateAuthenticationService()
     {
-      return new AuthenticationService(new UserDao("Host=localhost;Username=postgres;Password=postgres;Database=graphoverflow"));
+      return new AuthenticationService(new UserDao("Host=localhost;Username=lukas;Password=Cisco0;Database=graphoverflow"));
     }
 
     public UserDto User { get; set; }

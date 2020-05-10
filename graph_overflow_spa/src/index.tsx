@@ -8,17 +8,29 @@ import { BrowserRouter as Router } from "react-router-dom";
 
 import { ApolloClient } from "apollo-client";
 import { InMemoryCache } from "apollo-cache-inmemory";
-import { HttpLink } from "apollo-link-http";
+import { createHttpLink } from "apollo-link-http";
+import { setContext } from "apollo-link-context";
 import { ApolloProvider } from "@apollo/react-hooks";
+
+import { getLoginToken } from "./authentication/AuthenticationUtils";
 
 
 const cache = new InMemoryCache();
-const link = new HttpLink({
+const httpLink = createHttpLink({
 	uri: "http://127.0.0.1:5000/api/graphql/"
+});
+const authenticationLink = setContext((_, { headers }) => {
+	const token = getLoginToken();
+	return {
+		headers: {
+			...headers,
+			authorization: token ? token : "",
+		}
+	};
 });
 const client = new ApolloClient({
 	cache,
-	link
+	link: authenticationLink.concat(httpLink)
 });
 
 ReactDOM.render(
