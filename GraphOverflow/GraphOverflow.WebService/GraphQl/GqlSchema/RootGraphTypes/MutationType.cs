@@ -57,23 +57,23 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       addTagField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       addTagField.Description = "adds a graphoverflow tag";
 
-      var upVoatQuestionField = Field<QuestionType>(
-        name: "upVoatQuestion",
+      var upVoteQuestionField = Field<QuestionType>(
+        name: "upVoteQuestion",
         arguments: new QueryArguments(
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" }),
-        resolve: ResolveUpvoatQuestion
+        resolve: ResolveUpvoteQuestion
       );
-      upVoatQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
-      upVoatQuestionField.Description = "upVoat question";
+      upVoteQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      upVoteQuestionField.Description = "upVote question";
 
-      var upVoatAnswerField = Field<AnswerType>(
-        name: "upVoatAnswer",
+      var upVoteAnswerField = Field<AnswerType>(
+        name: "upVoteAnswer",
         arguments: new QueryArguments(
           new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" }),
-        resolve: ResolveUpvoatAnswer
+        resolve: ResolveUpvoteAnswer
       );
-      upVoatAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
-      upVoatAnswerField.Description = "upVoat answer";
+      upVoteAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      upVoteAnswerField.Description = "upVote answer";
 
       var addQuestionField = Field<QuestionType>(
         name: "addQuestion",
@@ -125,19 +125,19 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       return createdTag;
     }
 
-    private async Task<object> ResolveUpvoatQuestion(IResolveFieldContext<object> context)
+    private async Task<object> ResolveUpvoteQuestion(IResolveFieldContext<object> context)
     {
       GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
       int questionId = context.GetArgument<int>("questionId");
-      QuestionDto updatedQuestion = await questionService.UpvoatQuestion(questionId, userContext.User.Id);
+      QuestionDto updatedQuestion = await questionService.UpvoteQuestion(questionId, userContext.User.Id);
       return updatedQuestion;
     }
 
-    private async Task<object> ResolveUpvoatAnswer(IResolveFieldContext<object> context)
+    private async Task<object> ResolveUpvoteAnswer(IResolveFieldContext<object> context)
     {
       GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
       int answerId = context.GetArgument<int>("answerId");
-      AnswerDto updatedQuestion = await answerService.UpvoatAnswer(answerId, userContext.User.Id);
+      AnswerDto updatedQuestion = await answerService.UpvoteAnswer(answerId, userContext.User.Id);
       return updatedQuestion;
     }
 

@@ -41,7 +41,7 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestions(await answerDao.FindQuestionsByTagId(tagId));
     }
 
-    public async Task<QuestionDto> UpvoatQuestion(int questionId, int userId)
+    public async Task<QuestionDto> UpvoteQuestion(int questionId, int userId)
     {
       var question = await answerDao.FindQuestionById(questionId);
       if (question != null)

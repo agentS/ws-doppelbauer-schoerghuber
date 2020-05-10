@@ -31,7 +31,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<IdGraphType>>("id");
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
-      Field<NonNullGraphType<IntGraphType>>("upVotes");
+      Field<NonNullGraphType<LongGraphType>>("upVotes");
       Field<NonNullGraphType<AnswerType>>(
         name: "answer", resolve: ResolveAnswer);
       Field<NonNullGraphType<UserGraphType>>(

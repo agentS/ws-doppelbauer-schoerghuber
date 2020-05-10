@@ -35,10 +35,7 @@ namespace GraphOverflow.WebService.GraphQl.ValidationRules
 
     public Task<INodeVisitor> ValidateAsync(ValidationContext context)
     {
-      return Task.Run(() => 
-      {
-        return Validate(context);
-      });
+      return Task.Run(() => Validate(context));
     }
   }
 }

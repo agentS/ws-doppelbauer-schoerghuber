@@ -39,7 +39,7 @@ namespace GraphOverflow.Dal.Implementation
               var title = (string)reader["title"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
-              var upVotes = (int)reader["up_votes"];
+              var upVotes = (long)reader["up_votes"];
               questions.Add(new Answer()
               {
                 Id = id,

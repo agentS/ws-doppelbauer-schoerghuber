@@ -48,6 +48,4 @@ namespace GraphOverflow.WebService.GraphQl.Extensions
       return builder;
     }
   }
-
-
 }
