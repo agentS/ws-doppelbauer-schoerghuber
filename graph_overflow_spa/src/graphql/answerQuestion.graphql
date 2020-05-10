@@ -1,0 +1,5 @@
+mutation answerQuestion($questionId: Int!, $content: String!) {
+  answerQuestion(questionId: $questionId, content: $content) {
+    id
+  }
+}

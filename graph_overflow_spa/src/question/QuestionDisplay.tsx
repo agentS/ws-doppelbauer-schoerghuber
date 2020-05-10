@@ -7,6 +7,8 @@ import { MOMENT_DATE_TIME_FORMAT_STRING } from "../Constants";
 
 import { FetchQuestionComponent } from "../graphql/GraphQlTypes";
 
+import PostAnswer from "./PostAnswer";
+
 interface QuestionDisplayProperties extends RouteComponentProps {
     questionId: number;
 }
@@ -46,6 +48,7 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
                                 </Col>
                             </Row>
                             <hr />
+                            <PostAnswer questionId={parseInt(data.question.id, 10)} />
                         </div>
                     );
                 }}

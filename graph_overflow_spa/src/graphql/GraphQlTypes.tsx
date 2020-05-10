@@ -202,6 +202,20 @@ export type Subscription = {
   tagAdded?: Maybe<Tag>;
 };
 
+export type AnswerQuestionMutationVariables = {
+  questionId: Scalars['Int'];
+  content: Scalars['String'];
+};
+
+
+export type AnswerQuestionMutation = (
+  { __typename?: 'Mutation' }
+  & { answerQuestion?: Maybe<(
+    { __typename?: 'Answer' }
+    & Pick<Answer, 'id'>
+  )> }
+);
+
 export type AskQuestionMutationVariables = {
   title: Scalars['String'];
   content: Scalars['String'];
@@ -276,6 +290,35 @@ export type LatestQuestionsQuery = (
 );
 
 
+export const AnswerQuestionDocument = gql`
+    mutation answerQuestion($questionId: Int!, $content: String!) {
+  answerQuestion(questionId: $questionId, content: $content) {
+    id
+  }
+}
+    `;
+export type AnswerQuestionMutationFn = ApolloReactCommon.MutationFunction<AnswerQuestionMutation, AnswerQuestionMutationVariables>;
+export type AnswerQuestionComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<AnswerQuestionMutation, AnswerQuestionMutationVariables>, 'mutation'>;
+
+    export const AnswerQuestionComponent = (props: AnswerQuestionComponentProps) => (
+      <ApolloReactComponents.Mutation<AnswerQuestionMutation, AnswerQuestionMutationVariables> mutation={AnswerQuestionDocument} {...props} />
+    );
+    
+export type AnswerQuestionProps<TChildProps = {}, TDataName extends string = 'mutate'> = {
+      [key in TDataName]: ApolloReactCommon.MutationFunction<AnswerQuestionMutation, AnswerQuestionMutationVariables>
+    } & TChildProps;
+export function withAnswerQuestion<TProps, TChildProps = {}, TDataName extends string = 'mutate'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  AnswerQuestionMutation,
+  AnswerQuestionMutationVariables,
+  AnswerQuestionProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withMutation<TProps, AnswerQuestionMutation, AnswerQuestionMutationVariables, AnswerQuestionProps<TChildProps, TDataName>>(AnswerQuestionDocument, {
+      alias: 'answerQuestion',
+      ...operationOptions
+    });
+};
+export type AnswerQuestionMutationResult = ApolloReactCommon.MutationResult<AnswerQuestionMutation>;
+export type AnswerQuestionMutationOptions = ApolloReactCommon.BaseMutationOptions<AnswerQuestionMutation, AnswerQuestionMutationVariables>;
 export const AskQuestionDocument = gql`
     mutation askQuestion($title: String!, $content: String!) {
   askQuestion(question: {title: $title, content: $content}) {
