@@ -15,6 +15,11 @@ namespace GraphOverflow.Services.Implementation
       this.answerDao = answerDao;
     }
 
+    public async Task<QuestionDto> FindQuestionById(int id)
+    {
+      return MapQuestion(await this.answerDao.FindQuestionById(id));
+    }
+
     public async Task<QuestionDto> FindQuestionForAnswer(AnswerDto answer)
     {
       return MapQuestion(await answerDao.FindQuestionById(answer.QuestionId));

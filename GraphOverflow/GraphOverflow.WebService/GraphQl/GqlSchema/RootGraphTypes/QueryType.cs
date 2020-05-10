@@ -53,7 +53,19 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
         name: "latestQuestions",
         resolve: ResolveLatestQuestions
-      );
+      ).Description = "load all questions";
+
+      Field<NonNullGraphType<QuestionType>>(
+        name: "question",
+        arguments: new QueryArguments(
+          new QueryArgument<IntGraphType>
+          {
+            Name = "id",
+            Description = "Question ID"
+          }
+        ),
+        resolve: ResolveQuestion
+      ).Description = "load a question";
     }
     #endregion Construction
 
@@ -80,6 +92,12 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     private async Task<object> ResolveLatestQuestions(IResolveFieldContext<object> context)
     {
       return await questionService.FindLatestQuestions();
+    }
+
+    private async Task<object> ResolveQuestion(IResolveFieldContext<object> context)
+    {
+      int questionId = (int)context.Arguments["id"];
+      return await questionService.FindQuestionById(questionId);
     }
     #endregion Resolvers
   }

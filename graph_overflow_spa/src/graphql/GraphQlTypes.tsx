@@ -54,10 +54,18 @@ export type Scalars = {
 export type Query = {
    __typename?: 'Query';
   allTags: Array<Tag>;
+  /** load all questions */
   latestQuestions: Array<Question>;
   me?: Maybe<User>;
+  /** load a question */
+  question: Question;
   /** get all tags that match the %tagName% */
   tags: Array<Tag>;
+};
+
+
+export type QueryQuestionArgs = {
+  id?: Maybe<Scalars['Int']>;
 };
 
 
@@ -222,6 +230,40 @@ export type LoginMutation = (
   )> }
 );
 
+export type FetchQuestionQueryVariables = {
+  questionId: Scalars['Int'];
+};
+
+
+export type FetchQuestionQuery = (
+  { __typename?: 'Query' }
+  & { question: (
+    { __typename?: 'Question' }
+    & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'name'>
+    ), tags: Array<(
+      { __typename?: 'Tag' }
+      & Pick<Tag, 'id' | 'name'>
+    )>, answers: Array<(
+      { __typename?: 'Answer' }
+      & Pick<Answer, 'id' | 'content' | 'createdAt' | 'upVotes'>
+      & { user: (
+        { __typename?: 'User' }
+        & Pick<User, 'id' | 'name'>
+      ), comments: Array<(
+        { __typename?: 'Comment' }
+        & Pick<Comment, 'id' | 'content' | 'createdAt' | 'upVotes'>
+        & { user: (
+          { __typename?: 'User' }
+          & Pick<User, 'id' | 'name'>
+        ) }
+      )> }
+    )> }
+  ) }
+);
+
 export type LatestQuestionsQueryVariables = {};
 
 
@@ -292,6 +334,64 @@ export function withLogin<TProps, TChildProps = {}, TDataName extends string = '
 };
 export type LoginMutationResult = ApolloReactCommon.MutationResult<LoginMutation>;
 export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
+export const FetchQuestionDocument = gql`
+    query fetchQuestion($questionId: Int!) {
+  question(id: $questionId) {
+    id
+    title
+    content
+    createdAt
+    upVotes
+    user {
+      name
+    }
+    tags {
+      id
+      name
+    }
+    answers {
+      id
+      content
+      createdAt
+      upVotes
+      user {
+        id
+        name
+      }
+      comments {
+        id
+        content
+        createdAt
+        upVotes
+        user {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+    `;
+export type FetchQuestionComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<FetchQuestionQuery, FetchQuestionQueryVariables>, 'query'> & ({ variables: FetchQuestionQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const FetchQuestionComponent = (props: FetchQuestionComponentProps) => (
+      <ApolloReactComponents.Query<FetchQuestionQuery, FetchQuestionQueryVariables> query={FetchQuestionDocument} {...props} />
+    );
+    
+export type FetchQuestionProps<TChildProps = {}, TDataName extends string = 'data'> = {
+      [key in TDataName]: ApolloReactHoc.DataValue<FetchQuestionQuery, FetchQuestionQueryVariables>
+    } & TChildProps;
+export function withFetchQuestion<TProps, TChildProps = {}, TDataName extends string = 'data'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  FetchQuestionQuery,
+  FetchQuestionQueryVariables,
+  FetchQuestionProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withQuery<TProps, FetchQuestionQuery, FetchQuestionQueryVariables, FetchQuestionProps<TChildProps, TDataName>>(FetchQuestionDocument, {
+      alias: 'fetchQuestion',
+      ...operationOptions
+    });
+};
+export type FetchQuestionQueryResult = ApolloReactCommon.QueryResult<FetchQuestionQuery, FetchQuestionQueryVariables>;
 export const LatestQuestionsDocument = gql`
     query latestQuestions {
   latestQuestions {
