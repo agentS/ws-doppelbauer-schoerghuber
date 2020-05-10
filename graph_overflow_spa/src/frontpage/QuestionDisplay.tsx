@@ -1,5 +1,5 @@
 import React from "react";
-import { Accordion, Button, Card } from "react-bootstrap";
+import { Accordion, Button, Card, Col, Row } from "react-bootstrap";
 
 import { Question } from "../graphql/GraphQlSchemaTypes";
 
@@ -16,11 +16,16 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
             <Card>
                 <Card.Header>
                     <Accordion.Toggle as={Button} variant="link" eventKey={this.props.question.id}>
-                        <h3>{this.props.question.title}</h3>
+                        <Row>
+                            <Col xs={6}>{this.props.question.upVotes} Upvote(s)</Col>
+                            <Col>{this.props.question.title}</Col>
+                        </Row>
                     </Accordion.Toggle>
                 </Card.Header>
                 <Accordion.Collapse eventKey={this.props.question.id}>
-                    <Card.Body>{this.props.question.content}</Card.Body>
+                    <Card.Body>
+                        {this.props.question.content}
+                    </Card.Body>
                 </Accordion.Collapse>
             </Card>
         );
