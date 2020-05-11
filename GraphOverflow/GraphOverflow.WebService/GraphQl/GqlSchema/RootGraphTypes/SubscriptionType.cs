@@ -5,6 +5,8 @@ using GraphQL.Resolvers;
 using GraphQL.Subscription;
 using GraphQL.Types;
 using System;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
@@ -16,13 +18,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
   public class SubscriptionType : ObjectGraphType
   {
     #region Members
-    private readonly ITagService tagService;
+    private readonly ICommentService commentService;
+    private readonly IAnswerService answerService;
     #endregion Members
 
     #region Construction
-    public SubscriptionType(ITagService tagService)
+    public SubscriptionType(IAnswerService answerService, ICommentService commentService)
     {
-      this.tagService = tagService;
+      this.answerService = answerService;
+      this.commentService = commentService;
       InitializeTypeName();
       InitializeFields();
     }
@@ -36,40 +40,63 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     {
       AddField(new EventStreamFieldType
       {
-        Name = "tagAdded",
-        Type = typeof(TagType),
-        Resolver = new FuncFieldResolver<TagDto>(ResolveTagAdded),
-        Subscriber = new EventStreamResolver<TagDto>(Subscribe)
+        Name = "answerAdded",
+        Type = typeof(AnswerType),
+        Arguments = new QueryArguments(
+          new QueryArgument<NonNullGraphType<IntGraphType>>
+          {
+            Name = "questionId",
+            Description = "ID of the question to listen to new answers for"
+          }
+        ),
+        Resolver = new FuncFieldResolver<AnswerDto>(ResolveAnswerAdded),
+        Subscriber = new EventStreamResolver<AnswerDto>(SubscribeForNewAnswers)
+      });
+      AddField(new EventStreamFieldType
+      {
+        Name = "commentAddedToAnswerOfQuestion",
+        Type = typeof(CommentType),
+        Arguments = new QueryArguments(
+          new QueryArgument<NonNullGraphType<IntGraphType>>
+          {
+            Name = "questionId",
+            Description = "ID of the question to listen to new comments to answers for"
+          }
+        ),
+        Resolver = new FuncFieldResolver<CommentDto>(ResolveCommentAdded),
+        Subscriber = new EventStreamResolver<CommentDto>(SubscribeForNewCommentsToAnswersOfQuestion)
       });
     }
+
     #endregion Construction
 
     #region Resolvers
-    private TagDto ResolveTagAdded(IResolveFieldContext context)
+    private AnswerDto ResolveAnswerAdded(IResolveFieldContext context)
     {
-      var tag = context.Source as TagDto;
-      return tag;
+      var answer = context.Source as AnswerDto;
+      return answer;
+    }
+    
+    private CommentDto ResolveCommentAdded(IResolveFieldContext context)
+    {
+      var comment = context.Source as CommentDto;
+      return comment;
     }
     #endregion Resolvers
 
     #region Subscription
-    private IObservable<TagDto> Subscribe(IResolveFieldContext context)
+    private IObservable<AnswerDto> SubscribeForNewAnswers(IResolveFieldContext context)
     {
-      //var messageContext = context.UserContext.As<MessageHandlingContext>();
-      //var user = messageContext.Get<ClaimsPrincipal>("user");
-
-      //string sub = "Anonymous";
-      //if (user != null)
-      //  sub = user.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
-
-      //return _chat.Messages(sub);
-      var result = tagService.Tags();
-      return result;
+      int questionId = (int)context.Arguments["questionId"];
+      return answerService.Answers()
+        .Where(answer => answer.QuestionId == questionId);
     }
 
-    private Task<IObservable<TagDto>> SubscribeAsync(IResolveEventStreamContext arg)
+    private IObservable<CommentDto> SubscribeForNewCommentsToAnswersOfQuestion(IResolveFieldContext context)
     {
-      return tagService.TaskAsync();
+      int questionId = (int)context.Arguments["questionId"];
+      return commentService.Comments()
+        .Where(comment => comment.QuestionId == questionId);
     }
     #endregion Subscription
   }

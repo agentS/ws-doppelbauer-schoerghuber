@@ -10,7 +10,11 @@ namespace GraphOverflow.WebService.GraphQl.ValidationRules
     public INodeVisitor Validate(ValidationContext context)
     {
       var userContext = context.UserContext as GraphQlUserContext;
-      var authenticated = userContext.IsUserAuthenticated();
+      bool authenticated = false;
+      if (userContext != null)
+      {
+        authenticated = userContext.IsUserAuthenticated();
+      }
 
       return new EnterLeaveListener(_ =>
       {
