@@ -2,6 +2,7 @@
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
@@ -35,7 +36,7 @@ namespace GraphOverflow.Services.Implementation
       var answer = await answerDao.FindAnswerById(answerId);
       if (answer != null)
       {
-        await answerDao.AddUpVoat(new Answer { Id = answer.Id }, new User { Id = userId });
+        await answerDao.AddUpVote(new Answer { Id = answer.Id }, new User { Id = userId });
         answer = await answerDao.FindQuestionById(answer.Id); // reload
       }
       return MapAnswer(answer);

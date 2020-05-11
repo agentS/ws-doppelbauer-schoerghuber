@@ -11,16 +11,21 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #region Members
     private readonly ITagService tagService;
     private readonly IAnswerService answerService;
+    private readonly IUpVoteUsersService upVoteUsersService;
     private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public QuestionType(ITagService tagService,
+    public QuestionType(
+      ITagService tagService,
       IAnswerService answerService,
-      IUserService userService)
+      IUpVoteUsersService upVoteUsersService,
+      IUserService userService
+    )
     {
       this.tagService = tagService;
       this.answerService = answerService;
+      this.upVoteUsersService = upVoteUsersService;
       this.userService = userService;
 
       InitializeName();
@@ -39,6 +44,8 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
       Field<NonNullGraphType<StringGraphType>>("title");
       Field<NonNullGraphType<LongGraphType>>("upVotes");
+      Field<NonNullGraphType<ListGraphType<NonNullGraphType<UserGraphType>>>>(
+        "upVoteUsers", resolve: ResolveUpVoteUsers);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
         name: "tags", resolve: ResolveTags);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<AnswerType>>>>(
@@ -51,6 +58,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #endregion Construction
 
     #region Resolvers
+
+    private object ResolveUpVoteUsers(IResolveFieldContext<QuestionDto> context)
+    {
+      var question = context.Source;
+      return upVoteUsersService.FindUpVoteUsersForQuestion(question);
+    }
+    
     private object ResolveTags(IResolveFieldContext<QuestionDto> context)
     {
       var question = context.Source;

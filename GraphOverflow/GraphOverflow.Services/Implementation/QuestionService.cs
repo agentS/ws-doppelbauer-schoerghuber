@@ -15,6 +15,11 @@ namespace GraphOverflow.Services.Implementation
       this.answerDao = answerDao;
     }
 
+    public async Task<QuestionDto> FindQuestionById(int id)
+    {
+      return MapQuestion(await this.answerDao.FindQuestionById(id));
+    }
+
     public async Task<QuestionDto> FindQuestionForAnswer(AnswerDto answer)
     {
       return MapQuestion(await answerDao.FindQuestionById(answer.QuestionId));
@@ -46,7 +51,7 @@ namespace GraphOverflow.Services.Implementation
       var question = await answerDao.FindQuestionById(questionId);
       if (question != null)
       {
-        await answerDao.AddUpVoat(new Answer { Id = question.Id }, new User { Id = userId });
+        await answerDao.AddUpVote(new Answer { Id = question.Id }, new User { Id = userId });
         question = await answerDao.FindQuestionById(question.Id); // reload
       }
       return MapQuestion(question);

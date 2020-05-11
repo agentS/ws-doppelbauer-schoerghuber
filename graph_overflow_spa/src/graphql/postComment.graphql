@@ -1,0 +1,11 @@
+mutation postComment($answerId: Int!, $content: String!) {
+  commentAnswer(answerId: $answerId, content: $content) {
+    id
+    content
+    createdAt
+    user {
+      id
+      name
+    }
+  }
+}

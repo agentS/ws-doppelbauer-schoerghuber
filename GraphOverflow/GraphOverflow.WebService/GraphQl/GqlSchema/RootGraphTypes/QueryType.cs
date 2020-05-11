@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using GraphOverflow.Services;
 using GraphOverflow.WebService.Constants;
 using GraphOverflow.WebService.GraphQl.Extensions;
@@ -12,15 +14,17 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     #region Members
     private readonly ITagService tagService;
     private readonly IQuestionService questionService;
+    private readonly IAnswerService answerService;
     private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public QueryType(ITagService tagService, IQuestionService questionService, IUserService userService)
+    public QueryType(ITagService tagService, IQuestionService questionService, IAnswerService answerService, IUserService userService)
     {
-      this.userService = userService;
       this.tagService = tagService;
       this.questionService = questionService;
+      this.answerService = answerService;
+      this.userService = userService;
       InitializeTypeName();
       InitializeFields();
     }
@@ -53,7 +57,19 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
         name: "latestQuestions",
         resolve: ResolveLatestQuestions
-      );
+      ).Description = "load all questions";
+
+      Field<NonNullGraphType<QuestionType>>(
+        name: "question",
+        arguments: new QueryArguments(
+          new QueryArgument<IntGraphType>
+          {
+            Name = "id",
+            Description = "Question ID"
+          }
+        ),
+        resolve: ResolveQuestion
+      ).Description = "load a question";
     }
     #endregion Construction
 
@@ -80,6 +96,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
     private async Task<object> ResolveLatestQuestions(IResolveFieldContext<object> context)
     {
       return await questionService.FindLatestQuestions();
+    }
+
+    private async Task<object> ResolveQuestion(IResolveFieldContext<object> context)
+    {
+      int questionId = (int)context.Arguments["id"];
+      var question = await questionService.FindQuestionById(questionId);
+      return question;
     }
     #endregion Resolvers
   }

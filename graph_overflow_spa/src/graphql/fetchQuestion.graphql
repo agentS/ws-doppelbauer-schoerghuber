@@ -1,0 +1,40 @@
+query fetchQuestion($questionId: Int!) {
+  question(id: $questionId) {
+    id
+    title
+    content
+    createdAt
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+    user {
+      name
+    }
+    answers {
+      id
+      content
+      createdAt
+      upVotes
+      upVoteUsers {
+        id
+        name
+      }
+      user {
+        id
+        name
+      }
+      comments {
+        id
+        content
+        createdAt
+        upVotes
+        user {
+          id
+          name
+        }
+      }
+    }
+  }
+}

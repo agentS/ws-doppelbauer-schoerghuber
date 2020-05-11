@@ -54,10 +54,18 @@ export type Scalars = {
 export type Query = {
    __typename?: 'Query';
   allTags: Array<Tag>;
+  /** load all questions */
   latestQuestions: Array<Question>;
   me?: Maybe<User>;
+  /** load a question */
+  question: Question;
   /** get all tags that match the %tagName% */
   tags: Array<Tag>;
+};
+
+
+export type QueryQuestionArgs = {
+  id?: Maybe<Scalars['Int']>;
 };
 
 
@@ -87,6 +95,7 @@ export type Question = PostInterface & {
   tags: Array<Tag>;
   title: Scalars['String'];
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
   user: User;
 };
 
@@ -98,6 +107,7 @@ export type Answer = PostInterface & {
   id: Scalars['ID'];
   question: Question;
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
   user: User;
 };
 
@@ -108,6 +118,7 @@ export type Comment = PostInterface & {
   createdAt: Scalars['DateTime'];
   id: Scalars['ID'];
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
   user: User;
 };
 
@@ -116,6 +127,7 @@ export type PostInterface = {
   createdAt: Scalars['DateTime'];
   id: Scalars['ID'];
   upVotes: Scalars['Long'];
+  upVoteUsers: Array<User>;
 };
 
 export type Mutation = {
@@ -194,6 +206,20 @@ export type Subscription = {
   tagAdded?: Maybe<Tag>;
 };
 
+export type AnswerQuestionMutationVariables = {
+  questionId: Scalars['Int'];
+  content: Scalars['String'];
+};
+
+
+export type AnswerQuestionMutation = (
+  { __typename?: 'Mutation' }
+  & { answerQuestion?: Maybe<(
+    { __typename?: 'Answer' }
+    & Pick<Answer, 'id'>
+  )> }
+);
+
 export type AskQuestionMutationVariables = {
   title: Scalars['String'];
   content: Scalars['String'];
@@ -222,6 +248,43 @@ export type LoginMutation = (
   )> }
 );
 
+export type FetchQuestionQueryVariables = {
+  questionId: Scalars['Int'];
+};
+
+
+export type FetchQuestionQuery = (
+  { __typename?: 'Query' }
+  & { question: (
+    { __typename?: 'Question' }
+    & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
+    & { upVoteUsers: Array<(
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    )>, user: (
+      { __typename?: 'User' }
+      & Pick<User, 'name'>
+    ), answers: Array<(
+      { __typename?: 'Answer' }
+      & Pick<Answer, 'id' | 'content' | 'createdAt' | 'upVotes'>
+      & { upVoteUsers: Array<(
+        { __typename?: 'User' }
+        & Pick<User, 'id' | 'name'>
+      )>, user: (
+        { __typename?: 'User' }
+        & Pick<User, 'id' | 'name'>
+      ), comments: Array<(
+        { __typename?: 'Comment' }
+        & Pick<Comment, 'id' | 'content' | 'createdAt' | 'upVotes'>
+        & { user: (
+          { __typename?: 'User' }
+          & Pick<User, 'id' | 'name'>
+        ) }
+      )> }
+    )> }
+  ) }
+);
+
 export type LatestQuestionsQueryVariables = {};
 
 
@@ -229,11 +292,92 @@ export type LatestQuestionsQuery = (
   { __typename?: 'Query' }
   & { latestQuestions: Array<(
     { __typename?: 'Question' }
-    & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
+    & Pick<Question, 'id' | 'title' | 'upVotes'>
+  )> }
+);
+
+export type PostCommentMutationVariables = {
+  answerId: Scalars['Int'];
+  content: Scalars['String'];
+};
+
+
+export type PostCommentMutation = (
+  { __typename?: 'Mutation' }
+  & { commentAnswer?: Maybe<(
+    { __typename?: 'Comment' }
+    & Pick<Comment, 'id' | 'content' | 'createdAt'>
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    ) }
+  )> }
+);
+
+export type UpVoteAnswerMutationVariables = {
+  answerId: Scalars['Int'];
+};
+
+
+export type UpVoteAnswerMutation = (
+  { __typename?: 'Mutation' }
+  & { upVoteAnswer?: Maybe<(
+    { __typename?: 'Answer' }
+    & Pick<Answer, 'id' | 'upVotes'>
+    & { upVoteUsers: Array<(
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    )> }
+  )> }
+);
+
+export type UpVoteQuestionMutationVariables = {
+  questionId: Scalars['Int'];
+};
+
+
+export type UpVoteQuestionMutation = (
+  { __typename?: 'Mutation' }
+  & { upVoteQuestion?: Maybe<(
+    { __typename?: 'Question' }
+    & Pick<Question, 'id' | 'upVotes'>
+    & { upVoteUsers: Array<(
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    )> }
   )> }
 );
 
 
+export const AnswerQuestionDocument = gql`
+    mutation answerQuestion($questionId: Int!, $content: String!) {
+  answerQuestion(questionId: $questionId, content: $content) {
+    id
+  }
+}
+    `;
+export type AnswerQuestionMutationFn = ApolloReactCommon.MutationFunction<AnswerQuestionMutation, AnswerQuestionMutationVariables>;
+export type AnswerQuestionComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<AnswerQuestionMutation, AnswerQuestionMutationVariables>, 'mutation'>;
+
+    export const AnswerQuestionComponent = (props: AnswerQuestionComponentProps) => (
+      <ApolloReactComponents.Mutation<AnswerQuestionMutation, AnswerQuestionMutationVariables> mutation={AnswerQuestionDocument} {...props} />
+    );
+    
+export type AnswerQuestionProps<TChildProps = {}, TDataName extends string = 'mutate'> = {
+      [key in TDataName]: ApolloReactCommon.MutationFunction<AnswerQuestionMutation, AnswerQuestionMutationVariables>
+    } & TChildProps;
+export function withAnswerQuestion<TProps, TChildProps = {}, TDataName extends string = 'mutate'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  AnswerQuestionMutation,
+  AnswerQuestionMutationVariables,
+  AnswerQuestionProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withMutation<TProps, AnswerQuestionMutation, AnswerQuestionMutationVariables, AnswerQuestionProps<TChildProps, TDataName>>(AnswerQuestionDocument, {
+      alias: 'answerQuestion',
+      ...operationOptions
+    });
+};
+export type AnswerQuestionMutationResult = ApolloReactCommon.MutationResult<AnswerQuestionMutation>;
+export type AnswerQuestionMutationOptions = ApolloReactCommon.BaseMutationOptions<AnswerQuestionMutation, AnswerQuestionMutationVariables>;
 export const AskQuestionDocument = gql`
     mutation askQuestion($title: String!, $content: String!) {
   askQuestion(question: {title: $title, content: $content}) {
@@ -292,13 +436,73 @@ export function withLogin<TProps, TChildProps = {}, TDataName extends string = '
 };
 export type LoginMutationResult = ApolloReactCommon.MutationResult<LoginMutation>;
 export type LoginMutationOptions = ApolloReactCommon.BaseMutationOptions<LoginMutation, LoginMutationVariables>;
+export const FetchQuestionDocument = gql`
+    query fetchQuestion($questionId: Int!) {
+  question(id: $questionId) {
+    id
+    title
+    content
+    createdAt
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+    user {
+      name
+    }
+    answers {
+      id
+      content
+      createdAt
+      upVotes
+      upVoteUsers {
+        id
+        name
+      }
+      user {
+        id
+        name
+      }
+      comments {
+        id
+        content
+        createdAt
+        upVotes
+        user {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+    `;
+export type FetchQuestionComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<FetchQuestionQuery, FetchQuestionQueryVariables>, 'query'> & ({ variables: FetchQuestionQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const FetchQuestionComponent = (props: FetchQuestionComponentProps) => (
+      <ApolloReactComponents.Query<FetchQuestionQuery, FetchQuestionQueryVariables> query={FetchQuestionDocument} {...props} />
+    );
+    
+export type FetchQuestionProps<TChildProps = {}, TDataName extends string = 'data'> = {
+      [key in TDataName]: ApolloReactHoc.DataValue<FetchQuestionQuery, FetchQuestionQueryVariables>
+    } & TChildProps;
+export function withFetchQuestion<TProps, TChildProps = {}, TDataName extends string = 'data'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  FetchQuestionQuery,
+  FetchQuestionQueryVariables,
+  FetchQuestionProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withQuery<TProps, FetchQuestionQuery, FetchQuestionQueryVariables, FetchQuestionProps<TChildProps, TDataName>>(FetchQuestionDocument, {
+      alias: 'fetchQuestion',
+      ...operationOptions
+    });
+};
+export type FetchQuestionQueryResult = ApolloReactCommon.QueryResult<FetchQuestionQuery, FetchQuestionQueryVariables>;
 export const LatestQuestionsDocument = gql`
     query latestQuestions {
   latestQuestions {
     id
     title
-    content
-    createdAt
     upVotes
   }
 }
@@ -323,3 +527,106 @@ export function withLatestQuestions<TProps, TChildProps = {}, TDataName extends 
     });
 };
 export type LatestQuestionsQueryResult = ApolloReactCommon.QueryResult<LatestQuestionsQuery, LatestQuestionsQueryVariables>;
+export const PostCommentDocument = gql`
+    mutation postComment($answerId: Int!, $content: String!) {
+  commentAnswer(answerId: $answerId, content: $content) {
+    id
+    content
+    createdAt
+    user {
+      id
+      name
+    }
+  }
+}
+    `;
+export type PostCommentMutationFn = ApolloReactCommon.MutationFunction<PostCommentMutation, PostCommentMutationVariables>;
+export type PostCommentComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<PostCommentMutation, PostCommentMutationVariables>, 'mutation'>;
+
+    export const PostCommentComponent = (props: PostCommentComponentProps) => (
+      <ApolloReactComponents.Mutation<PostCommentMutation, PostCommentMutationVariables> mutation={PostCommentDocument} {...props} />
+    );
+    
+export type PostCommentProps<TChildProps = {}, TDataName extends string = 'mutate'> = {
+      [key in TDataName]: ApolloReactCommon.MutationFunction<PostCommentMutation, PostCommentMutationVariables>
+    } & TChildProps;
+export function withPostComment<TProps, TChildProps = {}, TDataName extends string = 'mutate'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  PostCommentMutation,
+  PostCommentMutationVariables,
+  PostCommentProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withMutation<TProps, PostCommentMutation, PostCommentMutationVariables, PostCommentProps<TChildProps, TDataName>>(PostCommentDocument, {
+      alias: 'postComment',
+      ...operationOptions
+    });
+};
+export type PostCommentMutationResult = ApolloReactCommon.MutationResult<PostCommentMutation>;
+export type PostCommentMutationOptions = ApolloReactCommon.BaseMutationOptions<PostCommentMutation, PostCommentMutationVariables>;
+export const UpVoteAnswerDocument = gql`
+    mutation upVoteAnswer($answerId: Int!) {
+  upVoteAnswer(answerId: $answerId) {
+    id
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+  }
+}
+    `;
+export type UpVoteAnswerMutationFn = ApolloReactCommon.MutationFunction<UpVoteAnswerMutation, UpVoteAnswerMutationVariables>;
+export type UpVoteAnswerComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<UpVoteAnswerMutation, UpVoteAnswerMutationVariables>, 'mutation'>;
+
+    export const UpVoteAnswerComponent = (props: UpVoteAnswerComponentProps) => (
+      <ApolloReactComponents.Mutation<UpVoteAnswerMutation, UpVoteAnswerMutationVariables> mutation={UpVoteAnswerDocument} {...props} />
+    );
+    
+export type UpVoteAnswerProps<TChildProps = {}, TDataName extends string = 'mutate'> = {
+      [key in TDataName]: ApolloReactCommon.MutationFunction<UpVoteAnswerMutation, UpVoteAnswerMutationVariables>
+    } & TChildProps;
+export function withUpVoteAnswer<TProps, TChildProps = {}, TDataName extends string = 'mutate'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  UpVoteAnswerMutation,
+  UpVoteAnswerMutationVariables,
+  UpVoteAnswerProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withMutation<TProps, UpVoteAnswerMutation, UpVoteAnswerMutationVariables, UpVoteAnswerProps<TChildProps, TDataName>>(UpVoteAnswerDocument, {
+      alias: 'upVoteAnswer',
+      ...operationOptions
+    });
+};
+export type UpVoteAnswerMutationResult = ApolloReactCommon.MutationResult<UpVoteAnswerMutation>;
+export type UpVoteAnswerMutationOptions = ApolloReactCommon.BaseMutationOptions<UpVoteAnswerMutation, UpVoteAnswerMutationVariables>;
+export const UpVoteQuestionDocument = gql`
+    mutation upVoteQuestion($questionId: Int!) {
+  upVoteQuestion(questionId: $questionId) {
+    id
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+  }
+}
+    `;
+export type UpVoteQuestionMutationFn = ApolloReactCommon.MutationFunction<UpVoteQuestionMutation, UpVoteQuestionMutationVariables>;
+export type UpVoteQuestionComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<UpVoteQuestionMutation, UpVoteQuestionMutationVariables>, 'mutation'>;
+
+    export const UpVoteQuestionComponent = (props: UpVoteQuestionComponentProps) => (
+      <ApolloReactComponents.Mutation<UpVoteQuestionMutation, UpVoteQuestionMutationVariables> mutation={UpVoteQuestionDocument} {...props} />
+    );
+    
+export type UpVoteQuestionProps<TChildProps = {}, TDataName extends string = 'mutate'> = {
+      [key in TDataName]: ApolloReactCommon.MutationFunction<UpVoteQuestionMutation, UpVoteQuestionMutationVariables>
+    } & TChildProps;
+export function withUpVoteQuestion<TProps, TChildProps = {}, TDataName extends string = 'mutate'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  UpVoteQuestionMutation,
+  UpVoteQuestionMutationVariables,
+  UpVoteQuestionProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withMutation<TProps, UpVoteQuestionMutation, UpVoteQuestionMutationVariables, UpVoteQuestionProps<TChildProps, TDataName>>(UpVoteQuestionDocument, {
+      alias: 'upVoteQuestion',
+      ...operationOptions
+    });
+};
+export type UpVoteQuestionMutationResult = ApolloReactCommon.MutationResult<UpVoteQuestionMutation>;
+export type UpVoteQuestionMutationOptions = ApolloReactCommon.BaseMutationOptions<UpVoteQuestionMutation, UpVoteQuestionMutationVariables>;

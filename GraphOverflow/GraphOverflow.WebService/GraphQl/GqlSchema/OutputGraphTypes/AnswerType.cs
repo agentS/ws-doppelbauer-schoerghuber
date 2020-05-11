@@ -9,16 +9,24 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
   public class AnswerType : ObjectGraphType<AnswerDto>
   {
     #region Members
+
     private readonly IQuestionService questionService;
     private readonly ICommentService commentService;
+    private readonly IUpVoteUsersService upVoteUsersService;
     private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public AnswerType(IQuestionService questionService, ICommentService commentService, IUserService userService)
+    public AnswerType(
+      IQuestionService questionService,
+      ICommentService commentService,
+      IUpVoteUsersService upVoteUsersService,
+      IUserService userService
+    )
     {
       this.questionService = questionService;
       this.commentService = commentService;
+      this.upVoteUsersService = upVoteUsersService;
       this.userService = userService;
       InitializeName();
       InitializeFields();
@@ -35,6 +43,9 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
       Field<NonNullGraphType<LongGraphType>>("upVotes");
+      Field<NonNullGraphType<ListGraphType<NonNullGraphType<UserGraphType>>>>(
+        "upVoteUsers", resolve: ResolveUpVoteUsers
+      );
       Field<NonNullGraphType<QuestionType>>(
         name: "question", resolve: ResolveQuestion);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<CommentType>>>>(
@@ -47,6 +58,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #endregion Construction
 
     #region Resolvers
+
+    private object ResolveUpVoteUsers(IResolveFieldContext<AnswerDto> context)
+    {
+      var answer = context.Source;
+      return upVoteUsersService.FindUpVoteUsersForAnswer(answer);
+    }
+    
     private object ResolveComments(IResolveFieldContext<AnswerDto> context)
     {
       var answer = context.Source;

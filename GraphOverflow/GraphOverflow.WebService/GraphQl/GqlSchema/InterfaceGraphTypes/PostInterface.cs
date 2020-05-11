@@ -1,6 +1,7 @@
 ﻿using GraphOverflow.Dtos;
 using GraphQL.Types;
 using System;
+using GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes
 {
@@ -24,6 +25,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
       Field<NonNullGraphType<LongGraphType>>("upVotes");
+      Field<NonNullGraphType<ListGraphType<NonNullGraphType<UserGraphType>>>>("upVoteUsers");
     }
     #endregion Construction
   }

@@ -2,6 +2,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -202,10 +203,14 @@ namespace GraphOverflow.Dal.Implementation
               var id = (int)reader["id"];
               var userId = (int)reader["user_id"];
               var content = (string)reader["content"];
-              var title = (string)reader["title"];
+              string title = string.Empty;
+              if (!await reader.IsDBNullAsync("title"))
+              {
+                title = (string)reader["title"];
+              }
               var createdAt = (DateTime)reader["created_at"];
               var upVotes = (long)reader["up_votes"];
-              answers.Add(new Answer
+              var model = new Answer
               {
                 Id = id,
                 Content = content,
@@ -213,12 +218,53 @@ namespace GraphOverflow.Dal.Implementation
                 UpVotes = upVotes,
                 Title = title,
                 UserId = userId
-              });
+              };
+              if (!await reader.IsDBNullAsync("question_id"))
+              {
+                model.QuestionId = (int)reader["question_id"];
+              }
+              answers.Add(model);
             }
           }
         }
       }
       return answers.FirstOrDefault();
+    }
+
+    public async Task<IEnumerable<UpVoteUser>> FindUpVoteUsersForPost(int postId)
+    {
+      const string QUERY = @"
+        SELECT a.user_id AS user_id, u.name AS username
+        FROM answer_up_vote AS a
+        INNER JOIN app_user AS u ON a.user_id = u.id
+        WHERE a.answer_id = @answerId
+      ";
+
+      await using (var conn = new NpgsqlConnection(this.connectionString))
+      {
+        await conn.OpenAsync();
+        await using (var command = new NpgsqlCommand(QUERY, conn))
+        {
+          command.Parameters.AddWithValue("answerId", postId);
+          await using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+          {
+            IList<UpVoteUser> upVoteUsers = new List<UpVoteUser>();
+            while (await reader.ReadAsync())
+            {
+              var userId = (int) reader["user_id"];
+              var username = (string) reader["username"];
+              
+              upVoteUsers.Add(new UpVoteUser
+              {
+                Id = userId,
+                Name = username
+              });
+            }
+
+            return upVoteUsers;
+          }
+        }
+      }
     }
 
     public async Task<int> CreateQuestion(Answer question, User user)
@@ -266,7 +312,7 @@ namespace GraphOverflow.Dal.Implementation
       }
     }
 
-    public async Task<bool> AddUpVoat(Answer question, User user)
+    public async Task<bool> AddUpVote(Answer question, User user)
     {
       const string STATEMENT = @"
         INSERT INTO answer_up_vote(user_id, answer_id)
