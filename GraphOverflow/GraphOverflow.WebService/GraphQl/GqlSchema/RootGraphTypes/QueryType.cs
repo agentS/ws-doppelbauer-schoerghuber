@@ -104,11 +104,11 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       int userId = (int) context.Arguments["userId"];
       if (userId != (-1))
       {
-        return await questionService.FindLatestQuestions();
+        return await questionService.FindLatestQuestionsByUserId(userId);
       }
       else
       {
-        return await questionService.FindLatestQuestionsByUserId(userId);
+        return await questionService.FindLatestQuestions();
       }
     }
 
