@@ -3,7 +3,11 @@ import { Row, Col } from "react-bootstrap";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import update from "immutability-helper";
 
-import { FetchQuestionComponent, User, Question, Answer } from "../graphql/GraphQlTypes";
+import {
+    FetchQuestionComponent,
+    AnswerAddedComponent, CommentAddedComponent,
+    User, Question, Answer, Comment
+} from "../graphql/GraphQlTypes";
 import { formatDateTime } from "../DateTimeUtilities";
 import { isLoggedIn } from "../authentication/AuthenticationUtils";
 
@@ -54,12 +58,53 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
                         upVoteUsers: { $set: newUpVoteUsers }
                     }
                 );
-                console.log(newAnswer);
                 this.setState({
                     question: update(
                         this.state.question,
                         {
                             answers: { $splice: [[ modifiedAnswerIndex, 1, newAnswer ]] } 
+                        }
+                    )
+                });
+            }
+        }
+    }
+
+    onNewAnswer(newAnswer: Answer) {
+        if (
+            (this.state.question)
+            && (!this.state.question.answers.find(answer => answer.id === newAnswer.id))
+        ) {
+            this.setState({
+                question: update(
+                    this.state.question,
+                    {
+                        answers: { $push: [ newAnswer ] }
+                    }
+                )
+            });
+        }
+    }
+
+    onNewComment(newComment: Comment) {
+        if (this.state.question) {
+            const answer = this.state.question.answers.find(answer => answer.id === newComment.answer.id);
+            if (
+                (answer)
+                && (!answer.comments.find(comment => comment.id === newComment.id))
+            ) {
+                const nextAnswer = update(
+                    answer,
+                    {
+                        comments: { $push: [ newComment ] }
+                    }
+                );
+                const answerIndex = this.state.question.answers.indexOf(answer);
+                this.setState({
+                    question: update(
+                        this.state.question,
+                        {
+                            answers: { $splice: [[ answerIndex, 1, nextAnswer ]] }
                         }
                     )
                 });
@@ -85,11 +130,50 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
                         return (<h3>Loading finished</h3>);
                     }}
                 </FetchQuestionComponent>
-
             );
         } else {
             return (
                 <div>
+                    <AnswerAddedComponent
+                        variables={{ questionId: parseInt(this.state.question.id) }}
+                        shouldResubscribe={true}
+                        onSubscriptionComplete={() => console.log("Subscribing for latest answers")}
+                    >
+                        {({ loading, error, data}) => {
+                            if (loading) {
+                                console.log("Started subscribing for latest answers");
+                            }
+                            if (error) {
+                                alert("Could not subscribe to the latest answers!");
+                                console.error(error);
+                            }
+
+                            if (data && data.answerAdded) {
+                                this.onNewAnswer(data.answerAdded as Answer);
+                            }
+                            return (<span></span>);
+                        }}
+                    </AnswerAddedComponent>
+                    <CommentAddedComponent
+                        variables={{ questionId: parseInt(this.state.question.id) }}
+                        shouldResubscribe={true}
+                        onSubscriptionComplete={() => console.log("Subscribing for latest comments")}
+                    >
+                        {({ loading, error, data }) => {
+                            if (loading) {
+                                console.log("Started subscribing for latest comments");
+                            }
+                            if (error) {
+                                alert("Could not subscribe to the latest comments!");
+                                console.error(error);
+                            }
+
+                            if (data && data.commentAddedToAnswerOfQuestion) {
+                                this.onNewComment(data.commentAddedToAnswerOfQuestion as Comment);
+                            }
+                            return (<span></span>);
+                        }}
+                    </CommentAddedComponent>
                     <Row>
                         <Col xs={2}>
                             <p>{this.state.question.upVotes} upvote(s)</p>
