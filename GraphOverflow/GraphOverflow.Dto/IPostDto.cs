@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GraphOverflow.Dtos
 {
@@ -9,6 +7,6 @@ namespace GraphOverflow.Dtos
     public int Id { get; set; }
     public string Content { get; set; }
     public DateTime CreatedAt { get; set; }
-    public int UpVoats { get; set; }
+    public long UpVotes { get; set; }
   }
 }

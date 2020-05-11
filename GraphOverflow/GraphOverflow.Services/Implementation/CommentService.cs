@@ -2,6 +2,7 @@
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
 {
@@ -18,14 +19,14 @@ namespace GraphOverflow.Services.Implementation
     }
     #endregion Construction
 
-    public IEnumerable<CommentDto> FindCommentsForAnswer(AnswerDto answer)
+    public async Task<IEnumerable<CommentDto>> FindCommentsForAnswer(AnswerDto answer)
     {
-      return MapComments(commentDao.FindCommentsByAnswerId(answer.Id));
+      return MapComments(await commentDao.FindCommentsByAnswerId(answer.Id));
     }
 
-    public IEnumerable<CommentDto> FindCommentsForQuestion(QuestionDto question)
+    public async Task<IEnumerable<CommentDto>> FindCommentsForQuestion(QuestionDto question)
     {
-      return MapComments(commentDao.FindCommentsByAnswerId(question.Id));
+      return MapComments(await commentDao.FindCommentsByAnswerId(question.Id));
     }
 
     private IEnumerable<CommentDto> MapComments(IEnumerable<Comment> comments)
@@ -45,9 +46,17 @@ namespace GraphOverflow.Services.Implementation
         Id = comment.Id,
         Content = comment.Content,
         CreatedAt = comment.CreatedAt,
-        AnswerId = comment.AnswerId
+        AnswerId = comment.AnswerId,
+        UserId = comment.UserId
       };
       return dto;
+    }
+
+    public async Task<CommentDto> CreateComment(string content, int answerId, int userId)
+    {
+      int commentId = await commentDao.CreateComment(content, answerId, userId);
+      Comment comment = await commentDao.FindCommentsById(commentId);
+      return MapComment(comment);
     }
   }
 }

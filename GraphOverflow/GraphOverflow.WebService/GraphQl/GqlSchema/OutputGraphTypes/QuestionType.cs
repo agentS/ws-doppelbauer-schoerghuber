@@ -2,6 +2,7 @@
 using GraphOverflow.Services;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes;
 using GraphQL.Types;
+using System;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
@@ -10,17 +11,17 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #region Members
     private readonly ITagService tagService;
     private readonly IAnswerService answerService;
-    private readonly ICommentService commentService;
+    private readonly IUserService userService;
     #endregion Members
 
     #region Construction
     public QuestionType(ITagService tagService,
       IAnswerService answerService,
-      ICommentService commentService)
+      IUserService userService)
     {
       this.tagService = tagService;
       this.answerService = answerService;
-      this.commentService = commentService;
+      this.userService = userService;
 
       InitializeName();
       InitializeFields();
@@ -37,13 +38,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
       Field<NonNullGraphType<StringGraphType>>("title");
-      Field<NonNullGraphType<IntGraphType>>("upVoats");
+      Field<NonNullGraphType<LongGraphType>>("upVotes");
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
         name: "tags", resolve: ResolveTags);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<AnswerType>>>>(
         name: "answers", resolve: ResolveAnswers);
-      ////Field<NonNullGraphType<ListGraphType<NonNullGraphType<CommentType>>>>(
-      ////  name: "comments", resolve: ResolveComments);
+      Field<NonNullGraphType<UserGraphType>>(
+        name: "user", resolve: ResolveUser);
 
       Interface<PostInterface>();
     }
@@ -63,10 +64,10 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 
     }
 
-    private object ResolveComments(IResolveFieldContext<QuestionDto> context)
+    private object ResolveUser(IResolveFieldContext<QuestionDto> context)
     {
       var question = context.Source;
-      return commentService.FindCommentsForQuestion(question);
+      return userService.FindUserById(question.UserId);
     }
     #endregion Resolvers
   }

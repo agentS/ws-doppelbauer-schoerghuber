@@ -2,6 +2,7 @@
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
 {
@@ -19,14 +20,32 @@ namespace GraphOverflow.Services.Implementation
     #endregion Construction
 
 
-    public IEnumerable<AnswerDto> FindAnswersForQuestion(QuestionDto question)
+    public async Task<IEnumerable<AnswerDto>> FindAnswersForQuestion(QuestionDto question)
     {
-      return MapAnswers(answerDao.FindAnswersByQuestionId(question.Id));
+      return MapAnswers(await answerDao.FindAnswersByQuestionId(question.Id));
     }
 
-    public AnswerDto FindAnswerForComment(CommentDto comment)
+    public async Task<AnswerDto> FindAnswerForComment(CommentDto comment)
     {
-      return MapAnswer(answerDao.FindAnswerById(comment.AnswerId));
+      return MapAnswer(await answerDao.FindAnswerById(comment.AnswerId));
+    }
+
+    public async Task<AnswerDto> UpvoteAnswer(int answerId, int userId)
+    {
+      var answer = await answerDao.FindAnswerById(answerId);
+      if (answer != null)
+      {
+        await answerDao.AddUpVoat(new Answer { Id = answer.Id }, new User { Id = userId });
+        answer = await answerDao.FindQuestionById(answer.Id); // reload
+      }
+      return MapAnswer(answer);
+    }
+
+    public async Task<AnswerDto> CreateAnswer(string content, int questionId, int userId)
+    {
+      int id = await answerDao.CreateAnswer(content, questionId, userId);
+      Answer answer = await answerDao.FindAnswerById(id);
+      return MapAnswer(answer);
     }
 
     private IEnumerable<AnswerDto> MapAnswers(IEnumerable<Answer> answers)
@@ -46,8 +65,9 @@ namespace GraphOverflow.Services.Implementation
         Id = answer.Id,
         Content = answer.Content,
         CreatedAt = answer.CreatedAt,
-        UpVoats = answer.UpVoats,
-        QuestionId = answer.QuestionId.Value
+        UpVotes = answer.UpVotes,
+        QuestionId = answer.QuestionId.Value,
+        UserId = answer.UserId
       };
       return dto;
     }

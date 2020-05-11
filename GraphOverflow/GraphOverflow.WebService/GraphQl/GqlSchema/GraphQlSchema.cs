@@ -7,11 +7,17 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema
 {
   public class GraphQlSchema : Schema
   {
-    public GraphQlSchema(ITagService tagService, IServiceProvider provider) 
+    public GraphQlSchema(ITagService tagService, 
+      IQuestionService questionService, 
+      IAuthenticationService authenticationService,
+      IAnswerService answerService,
+      IServiceProvider provider,
+      IUserService userService,
+      ICommentService commentService) 
       : base(provider)
     {
-      Query = new QueryType(tagService);
-      Mutation = new MutationType(tagService);
+      Query = new QueryType(tagService, questionService, userService);
+      Mutation = new MutationType(tagService, questionService, answerService, authenticationService, commentService);
       Subscription = new SubscriptionType(tagService);
     }
   }

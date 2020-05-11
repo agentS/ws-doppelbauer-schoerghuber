@@ -2,6 +2,7 @@
 using GraphOverflow.Services;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes;
 using GraphQL.Types;
+using System;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
@@ -10,13 +11,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     #region Members
     private readonly IQuestionService questionService;
     private readonly ICommentService commentService;
+    private readonly IUserService userService;
     #endregion Members
 
     #region Construction
-    public AnswerType(IQuestionService questionService, ICommentService commentService)
+    public AnswerType(IQuestionService questionService, ICommentService commentService, IUserService userService)
     {
       this.questionService = questionService;
       this.commentService = commentService;
+      this.userService = userService;
       InitializeName();
       InitializeFields();
     }
@@ -31,11 +34,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       Field<NonNullGraphType<IdGraphType>>("id");
       Field<NonNullGraphType<StringGraphType>>("content");
       Field<NonNullGraphType<DateTimeGraphType>>("createdAt");
-      Field<NonNullGraphType<IntGraphType>>("upVoats");
+      Field<NonNullGraphType<LongGraphType>>("upVotes");
       Field<NonNullGraphType<QuestionType>>(
         name: "question", resolve: ResolveQuestion);
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<CommentType>>>>(
         name: "comments", resolve: ResolveComments);
+      Field<NonNullGraphType<UserGraphType>>(
+        name: "user", resolve: ResolveUser);
 
       Interface<PostInterface>();
     }
@@ -52,6 +57,12 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     {
       var answer = context.Source;
       return questionService.FindQuestionForAnswer(answer);
+    }
+
+    private object ResolveUser(IResolveFieldContext<AnswerDto> context)
+    {
+      var answer = context.Source;
+      return userService.FindUserById(answer.UserId);
     }
     #endregion Resolvers
   }

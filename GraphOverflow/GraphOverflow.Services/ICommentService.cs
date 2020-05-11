@@ -1,11 +1,13 @@
 ﻿using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GraphOverflow.Services
 {
   public interface ICommentService
   {
-    IEnumerable<CommentDto> FindCommentsForAnswer(AnswerDto answer);
-    IEnumerable<CommentDto> FindCommentsForQuestion(QuestionDto question);
+    Task<IEnumerable<CommentDto>> FindCommentsForAnswer(AnswerDto answer);
+    Task<IEnumerable<CommentDto>> FindCommentsForQuestion(QuestionDto question);
+    Task<CommentDto> CreateComment(string content, int answerId, int id);
   }
 }

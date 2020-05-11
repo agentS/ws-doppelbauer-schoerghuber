@@ -23,9 +23,5 @@
     <ProjectReference Include="..\GraphOverflow.Services\GraphOverflow.Services.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="GraphQl\GqlSchema\InputGraphTypes\" />
-  </ItemGroup>
-
 
 </Project>

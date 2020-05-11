@@ -1,13 +1,14 @@
-using System;
 using GraphOverflow.Dal;
 using GraphOverflow.Dal.Implementation;
 using GraphOverflow.Services;
 using GraphOverflow.Services.Implementation;
 using GraphOverflow.WebService.GraphQl;
 using GraphOverflow.WebService.GraphQl.GqlSchema;
+using GraphOverflow.WebService.GraphQl.ValidationRules;
 using GraphQL.Server;
 using GraphQL.Server.Ui.GraphiQL;
 using GraphQL.Server.Ui.Playground;
+using GraphQL.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -50,12 +51,18 @@ namespace GraphOverflow.WebService
 
       // define services
       services.AddSingleton<ITagDao, TagDao>(factory => new TagDao(connectionString));
+      services.AddSingleton<IUserDao, UserDao>(factory => new UserDao(connectionString));
       services.AddSingleton<IAnswerDao, AnswerDao>(factory => new AnswerDao(connectionString));
       services.AddSingleton<ICommentDao, CommentDao>(factory => new CommentDao(connectionString));
+      services.AddSingleton<IAuthenticationService, AuthenticationService>();
       services.AddSingleton<ITagService, TagService>();
       services.AddSingleton<IQuestionService, QuestionService>();
       services.AddSingleton<IAnswerService, AnswerService>();
       services.AddSingleton<ICommentService, CommentService>();
+      services.AddSingleton<IUserService, UserService>();
+
+      services.AddSingleton<IValidationRule, RequiresAuthValidationRule>();
+
 
       //define schema types
       //services.AddSingleton<TagType>();
@@ -71,10 +78,11 @@ namespace GraphOverflow.WebService
             //options.EnableMetrics = Environment.IsDevelopment();
             options.ExposeExceptions = Environment.IsDevelopment();
           })
+          .AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
           .AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
           .AddWebSockets() // Add required services for web socket support
           //.AddDataLoader() // Add required services for DataLoader support
-          .AddGraphTypes(typeof(GraphQlSchema)); // Add all IGraphType implementors in assembly which GraphQlSchema exists 
+          .AddGraphTypes(typeof(GraphQlSchema)); // Add all IGraphType implementors in assembly which GraphQlSchema exists
 
       // define services
       //services.AddSingleton<ITagService, TagService>();

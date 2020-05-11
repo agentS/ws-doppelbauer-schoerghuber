@@ -41,6 +41,8 @@ namespace GraphOverflow.GraphQl.RootGraphTypes
       var createdTag = tagService.AddTag(tagName);
       return createdTag;
     }
+    
+    
     #endregion Resolvers
   }
 }
