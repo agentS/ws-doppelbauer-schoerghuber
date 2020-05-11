@@ -74,6 +74,12 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestion(question);
     }
 
+    public async Task<IEnumerable<QuestionDto>> FindQuestionsByTagName(string tagName)
+    {
+      var questions = await answerDao.FindQuestionsByTagName(tagName);
+      return MapQuestions(questions);
+    }
+
     private IEnumerable<QuestionDto> MapQuestions(IEnumerable<Answer> questions)
     {
       IList<QuestionDto> questionDtos = new List<QuestionDto>();

@@ -1,5 +1,5 @@
 import React from "react";
-import { ListGroup, Col, Row } from "react-bootstrap";
+import { ListGroup, Col, Row, Badge } from "react-bootstrap";
 
 import { LatestQuestionsComponent } from "../graphql/GraphQlTypes";
 
@@ -28,6 +28,7 @@ const QuestionsList: React.FC<QuestionsListProperties> = () => {
 									<Row>
 										<Col xs={2}>{question.upVotes} Upvotes</Col>
 										<Col>{question.title}</Col>
+										<Col>{question.tags.map(t => <span><Badge variant="dark">{t.name}</Badge>{' '}</span>)}</Col>
 									</Row>
 								</ListGroup.Item>
 							))}

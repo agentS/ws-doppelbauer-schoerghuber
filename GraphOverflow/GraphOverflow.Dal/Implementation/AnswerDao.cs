@@ -374,5 +374,47 @@ namespace GraphOverflow.Dal.Implementation
         }
       }
     }
+
+    public async Task<IEnumerable<Answer>> FindQuestionsByTagName(string tagName)
+    {
+      string QUERY = $@"
+        SELECT DISTINCT a.id, a.title, a.content, a.created_at,
+        (select count(*) from answer_up_vote where answer_id = a.id) as up_votes
+        FROM answer a
+        inner join tag_answer ta on a.id = ta.answer_id
+        inner join tag t on ta.tag_id = t.id
+        WHERE t.name LIKE '%{tagName}%' and a.question_id IS NULL
+        ORDER BY up_votes DESC
+      ";
+      await using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        await using (var command = new NpgsqlCommand(QUERY, connection))
+        {
+          await using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+          {
+            IList<Answer> questions = new List<Answer>();
+            while (await reader.ReadAsync())
+            {
+              var id = (int)reader["id"];
+              var title = (string)reader["title"];
+              var content = (string)reader["content"];
+              var createdAt = (DateTime)reader["created_at"];
+              var upVotes = (long)reader["up_votes"];
+              questions.Add(new Answer()
+              {
+                Id = id,
+                Title = title,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVotes = upVotes
+              });
+            }
+
+            return questions;
+          }
+        }
+      }
+    }
   }
 }

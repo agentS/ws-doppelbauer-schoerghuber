@@ -1,0 +1,11 @@
+query searchByTagName($tagName: String!) {
+  questionsByTag(tagName: $tagName) {
+    id
+    upVotes
+    title
+    tags{
+      id
+      name
+    }
+  }
+}

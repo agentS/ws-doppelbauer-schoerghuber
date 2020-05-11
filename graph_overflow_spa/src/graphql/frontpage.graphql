@@ -3,5 +3,9 @@ query latestQuestions{
         id
         title
         upVotes
+        tags{
+            id
+            name
+        }
     }
 }
