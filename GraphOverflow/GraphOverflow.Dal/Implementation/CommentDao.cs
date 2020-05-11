@@ -42,10 +42,12 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<IEnumerable<Comment>> FindCommentsByAnswerId(int answerId)
     {
       IList<Comment> comments = new List<Comment>();
-      string sql = "select c.id, c.content, c.created_at, c.answer_id, c.user_id " +
-        "from answer " +
-        "inner join comment c on answer.id = c.answer_id " +
-        "where answer.id = @answId";
+      string sql = @"
+        SELECT c.id, c.content, c.created_at, c.answer_id, c.user_id, a.question_id 
+        FROM answer AS a
+        INNER JOIN comment c on a.id = c.answer_id
+        WHERE a.id = @answId
+      ";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();
@@ -60,14 +62,16 @@ namespace GraphOverflow.Dal.Implementation
               var userId = (int)reader["user_id"];
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
-              var questId = (int)reader["answer_id"];
+              var answerIdResult = (int)reader["answer_id"];
+              var questionId = (int)reader["question_id"];
               comments.Add(new Comment
               {
                 Id = id,
                 Content = content,
                 CreatedAt = createdAt,
-                AnswerId = questId,
-                UserId = userId
+                AnswerId = answerIdResult,
+                UserId = userId,
+                QuestionId = questionId
               });
             }
           }
@@ -80,9 +84,10 @@ namespace GraphOverflow.Dal.Implementation
     {
       IList<Comment> comments = new List<Comment>();
       string sql = @"
-        select id, answer_id, created_at, content, user_id
-        from comment
-        where id = @id
+        SELECT c.id, c.answer_id, c.created_at, c.content, c.user_id, a.question_id
+        FROM comment AS c
+        INNER JOIN answer a ON c.answer_id = a.id
+        WHERE c.id = @id
       ";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
@@ -99,13 +104,15 @@ namespace GraphOverflow.Dal.Implementation
               var content = (string)reader["content"];
               var createdAt = (DateTime)reader["created_at"];
               var answId = (int)reader["answer_id"];
+              var questionId = (int)reader["question_id"];
               comments.Add(new Comment
               {
                 Id = id,
                 Content = content,
                 CreatedAt = createdAt,
                 UserId = userId,
-                AnswerId = answId
+                AnswerId = answId,
+                QuestionId = questionId
               });
             }
           }

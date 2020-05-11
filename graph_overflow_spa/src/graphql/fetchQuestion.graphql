@@ -29,7 +29,6 @@ query fetchQuestion($questionId: Int!) {
         id
         content
         createdAt
-        upVotes
         user {
           id
           name

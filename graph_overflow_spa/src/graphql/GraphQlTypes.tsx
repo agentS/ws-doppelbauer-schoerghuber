@@ -203,7 +203,18 @@ export type UserLoginInput = {
 
 export type Subscription = {
    __typename?: 'Subscription';
-  tagAdded?: Maybe<Tag>;
+  answerAdded?: Maybe<Answer>;
+  commentAddedToAnswerOfQuestion?: Maybe<Comment>;
+};
+
+
+export type SubscriptionAnswerAddedArgs = {
+  questionId: Scalars['Int'];
+};
+
+
+export type SubscriptionCommentAddedToAnswerOfQuestionArgs = {
+  questionId: Scalars['Int'];
 };
 
 export type AnswerQuestionMutationVariables = {
@@ -275,7 +286,7 @@ export type FetchQuestionQuery = (
         & Pick<User, 'id' | 'name'>
       ), comments: Array<(
         { __typename?: 'Comment' }
-        & Pick<Comment, 'id' | 'content' | 'createdAt' | 'upVotes'>
+        & Pick<Comment, 'id' | 'content' | 'createdAt'>
         & { user: (
           { __typename?: 'User' }
           & Pick<User, 'id' | 'name'>
@@ -310,6 +321,53 @@ export type PostCommentMutation = (
     & { user: (
       { __typename?: 'User' }
       & Pick<User, 'id' | 'name'>
+    ) }
+  )> }
+);
+
+export type AnswerAddedSubscriptionVariables = {
+  questionId: Scalars['Int'];
+};
+
+
+export type AnswerAddedSubscription = (
+  { __typename?: 'Subscription' }
+  & { answerAdded?: Maybe<(
+    { __typename?: 'Answer' }
+    & Pick<Answer, 'id' | 'content' | 'createdAt' | 'upVotes'>
+    & { upVoteUsers: Array<(
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    )>, user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    ), comments: Array<(
+      { __typename?: 'Comment' }
+      & Pick<Comment, 'id' | 'content' | 'createdAt'>
+      & { user: (
+        { __typename?: 'User' }
+        & Pick<User, 'id' | 'name'>
+      ) }
+    )> }
+  )> }
+);
+
+export type CommentAddedSubscriptionVariables = {
+  questionId: Scalars['Int'];
+};
+
+
+export type CommentAddedSubscription = (
+  { __typename?: 'Subscription' }
+  & { commentAddedToAnswerOfQuestion?: Maybe<(
+    { __typename?: 'Comment' }
+    & Pick<Comment, 'id' | 'content' | 'createdAt'>
+    & { user: (
+      { __typename?: 'User' }
+      & Pick<User, 'id' | 'name'>
+    ), answer: (
+      { __typename?: 'Answer' }
+      & Pick<Answer, 'id'>
     ) }
   )> }
 );
@@ -468,7 +526,6 @@ export const FetchQuestionDocument = gql`
         id
         content
         createdAt
-        upVotes
         user {
           id
           name
@@ -562,6 +619,89 @@ export function withPostComment<TProps, TChildProps = {}, TDataName extends stri
 };
 export type PostCommentMutationResult = ApolloReactCommon.MutationResult<PostCommentMutation>;
 export type PostCommentMutationOptions = ApolloReactCommon.BaseMutationOptions<PostCommentMutation, PostCommentMutationVariables>;
+export const AnswerAddedDocument = gql`
+    subscription answerAdded($questionId: Int!) {
+  answerAdded(questionId: $questionId) {
+    id
+    content
+    createdAt
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+    user {
+      id
+      name
+    }
+    comments {
+      id
+      content
+      createdAt
+      user {
+        id
+        name
+      }
+    }
+  }
+}
+    `;
+export type AnswerAddedComponentProps = Omit<ApolloReactComponents.SubscriptionComponentOptions<AnswerAddedSubscription, AnswerAddedSubscriptionVariables>, 'subscription'>;
+
+    export const AnswerAddedComponent = (props: AnswerAddedComponentProps) => (
+      <ApolloReactComponents.Subscription<AnswerAddedSubscription, AnswerAddedSubscriptionVariables> subscription={AnswerAddedDocument} {...props} />
+    );
+    
+export type AnswerAddedProps<TChildProps = {}, TDataName extends string = 'data'> = {
+      [key in TDataName]: ApolloReactHoc.DataValue<AnswerAddedSubscription, AnswerAddedSubscriptionVariables>
+    } & TChildProps;
+export function withAnswerAdded<TProps, TChildProps = {}, TDataName extends string = 'data'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  AnswerAddedSubscription,
+  AnswerAddedSubscriptionVariables,
+  AnswerAddedProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withSubscription<TProps, AnswerAddedSubscription, AnswerAddedSubscriptionVariables, AnswerAddedProps<TChildProps, TDataName>>(AnswerAddedDocument, {
+      alias: 'answerAdded',
+      ...operationOptions
+    });
+};
+export type AnswerAddedSubscriptionResult = ApolloReactCommon.SubscriptionResult<AnswerAddedSubscription>;
+export const CommentAddedDocument = gql`
+    subscription commentAdded($questionId: Int!) {
+  commentAddedToAnswerOfQuestion(questionId: $questionId) {
+    id
+    content
+    createdAt
+    user {
+      id
+      name
+    }
+    answer {
+      id
+    }
+  }
+}
+    `;
+export type CommentAddedComponentProps = Omit<ApolloReactComponents.SubscriptionComponentOptions<CommentAddedSubscription, CommentAddedSubscriptionVariables>, 'subscription'>;
+
+    export const CommentAddedComponent = (props: CommentAddedComponentProps) => (
+      <ApolloReactComponents.Subscription<CommentAddedSubscription, CommentAddedSubscriptionVariables> subscription={CommentAddedDocument} {...props} />
+    );
+    
+export type CommentAddedProps<TChildProps = {}, TDataName extends string = 'data'> = {
+      [key in TDataName]: ApolloReactHoc.DataValue<CommentAddedSubscription, CommentAddedSubscriptionVariables>
+    } & TChildProps;
+export function withCommentAdded<TProps, TChildProps = {}, TDataName extends string = 'data'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  CommentAddedSubscription,
+  CommentAddedSubscriptionVariables,
+  CommentAddedProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withSubscription<TProps, CommentAddedSubscription, CommentAddedSubscriptionVariables, CommentAddedProps<TChildProps, TDataName>>(CommentAddedDocument, {
+      alias: 'commentAdded',
+      ...operationOptions
+    });
+};
+export type CommentAddedSubscriptionResult = ApolloReactCommon.SubscriptionResult<CommentAddedSubscription>;
 export const UpVoteAnswerDocument = gql`
     mutation upVoteAnswer($answerId: Int!) {
   upVoteAnswer(answerId: $answerId) {

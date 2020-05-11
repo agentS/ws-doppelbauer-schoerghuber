@@ -1,4 +1,5 @@
-﻿using GraphOverflow.Dtos;
+﻿using System;
+using GraphOverflow.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -10,5 +11,6 @@ namespace GraphOverflow.Services
     Task<AnswerDto> FindAnswerForComment(CommentDto comment);
     Task<AnswerDto> UpvoteAnswer(int answerId, int userId);
     Task<AnswerDto> CreateAnswer(string content, int questionId, int userId);
+    IObservable<AnswerDto> Answers();
   }
 }

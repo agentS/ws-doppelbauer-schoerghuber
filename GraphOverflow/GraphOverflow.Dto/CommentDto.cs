@@ -10,5 +10,6 @@ namespace GraphOverflow.Dtos
     public int AnswerId { get; set; }
     public long UpVotes { get; set; }
     public int UserId { get; set; }
+    public int QuestionId { get; set; }
   }
 }

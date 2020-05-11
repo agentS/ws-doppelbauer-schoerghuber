@@ -9,7 +9,7 @@ import { isLoggedIn, clearLoginToken } from "./authentication/AuthenticationUtil
 
 import AskQuestion from "./ask/AskQuestion";
 import QuestionsList from "./frontpage/QuestionsList";
-import QuestionDisplay from "./question/QuestionDisplay";
+import QuestionPage from "./question/QuestionPage";
 import Login from "./authentication/Login";
 
 interface AppProperties extends RouteComponentProps {}
@@ -26,8 +26,8 @@ class App extends React.Component<AppProperties, AppState> {
     const questionsList = () => (<QuestionsList />);
     const login = () => (<Login />);
     const askQuestion = () => (<AskQuestion />);
-    const questionDisplay = ({match}: any) => (
-      <QuestionDisplay questionId={match.params.questionId} />
+    const questionPage = ({match}: any) => (
+      <QuestionPage questionId={match.params.questionId} />
     );
 
     return (
@@ -49,7 +49,7 @@ class App extends React.Component<AppProperties, AppState> {
 
         <Route exact path="/" component={questionsList} />
         <Route exact path="/questions" component={questionsList} />
-        <Route exact path="/question/:questionId" component={questionDisplay} />
+        <Route exact path="/question/:questionId" component={questionPage} />
         <Route exact path="/ask" component={askQuestion}/>
         <Route exact path="/login" component={login}/>
       </div>

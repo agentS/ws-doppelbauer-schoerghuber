@@ -1,0 +1,40 @@
+subscription answerAdded($questionId: Int!) {
+  answerAdded(questionId: $questionId) {
+    id
+    content
+    createdAt
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+    user {
+      id
+      name
+    }
+    comments {
+      id
+      content
+      createdAt
+      user {
+        id
+        name
+      }
+    }
+  }
+}
+
+subscription commentAdded($questionId: Int!) {
+  commentAddedToAnswerOfQuestion(questionId: $questionId) {
+    id
+    content
+    createdAt
+    user {
+      id
+      name
+    }
+    answer {
+      id
+    }
+  }
+}

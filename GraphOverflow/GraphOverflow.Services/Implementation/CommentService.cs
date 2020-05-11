@@ -1,7 +1,10 @@
-﻿using GraphOverflow.Dal;
+﻿using System;
+using GraphOverflow.Dal;
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
@@ -10,12 +13,14 @@ namespace GraphOverflow.Services.Implementation
   {
     #region Members
     private readonly ICommentDao commentDao;
+    private readonly ISubject<CommentDto> commentStream;
     #endregion Members
 
     #region Construction
     public CommentService(ICommentDao commentDao)
     {
       this.commentDao = commentDao;
+      this.commentStream = new Subject<CommentDto>();
     }
     #endregion Construction
 
@@ -47,7 +52,8 @@ namespace GraphOverflow.Services.Implementation
         Content = comment.Content,
         CreatedAt = comment.CreatedAt,
         AnswerId = comment.AnswerId,
-        UserId = comment.UserId
+        UserId = comment.UserId,
+        QuestionId = comment.QuestionId
       };
       return dto;
     }
@@ -56,7 +62,14 @@ namespace GraphOverflow.Services.Implementation
     {
       int commentId = await commentDao.CreateComment(content, answerId, userId);
       Comment comment = await commentDao.FindCommentsById(commentId);
-      return MapComment(comment);
+      var dto = MapComment(comment);
+      commentStream.OnNext(dto);
+      return dto;
+    }
+
+    public IObservable<CommentDto> Comments()
+    {
+      return commentStream.AsObservable();
     }
   }
 }

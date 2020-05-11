@@ -1,8 +1,11 @@
-﻿using GraphOverflow.Dal;
+﻿using System;
+using GraphOverflow.Dal;
 using GraphOverflow.Domain;
 using GraphOverflow.Dtos;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 
 namespace GraphOverflow.Services.Implementation
@@ -11,12 +14,15 @@ namespace GraphOverflow.Services.Implementation
   {
     #region Members
     private readonly IAnswerDao answerDao;
+    private readonly ISubject<AnswerDto> answerStream;
+    
     #endregion Members
 
     #region Construction
     public AnswerService(IAnswerDao answerDao)
     {
       this.answerDao = answerDao;
+      this.answerStream = new Subject<AnswerDto>();
     }
     #endregion Construction
 
@@ -46,7 +52,14 @@ namespace GraphOverflow.Services.Implementation
     {
       int id = await answerDao.CreateAnswer(content, questionId, userId);
       Answer answer = await answerDao.FindAnswerById(id);
-      return MapAnswer(answer);
+      var dto = MapAnswer(answer);
+      answerStream.OnNext(dto);
+      return dto;
+    }
+
+    public IObservable<AnswerDto> Answers()
+    {
+      return answerStream.AsObservable();
     }
 
     private IEnumerable<AnswerDto> MapAnswers(IEnumerable<Answer> answers)
