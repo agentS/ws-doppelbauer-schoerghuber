@@ -41,6 +41,11 @@ namespace GraphOverflow.Services.Implementation
       return MapQuestions(await answerDao.FindLatestQuestions());
     }
 
+    public async Task<IEnumerable<QuestionDto>> FindLatestQuestionsByUserId(int userId)
+    {
+      return MapQuestions(await answerDao.FindLatestQuestionsByUserId(userId));
+    }
+
     public async Task<IEnumerable<QuestionDto>> FindQuestionsByTagId(int tagId)
     {
       return MapQuestions(await answerDao.FindQuestionsByTagId(tagId));

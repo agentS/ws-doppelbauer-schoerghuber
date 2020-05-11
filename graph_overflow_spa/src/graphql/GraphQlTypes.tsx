@@ -64,6 +64,11 @@ export type Query = {
 };
 
 
+export type QueryLatestQuestionsArgs = {
+  userId?: Maybe<Scalars['Int']>;
+};
+
+
 export type QueryQuestionArgs = {
   id?: Maybe<Scalars['Int']>;
 };
@@ -304,6 +309,23 @@ export type LatestQuestionsQuery = (
   & { latestQuestions: Array<(
     { __typename?: 'Question' }
     & Pick<Question, 'id' | 'title' | 'upVotes'>
+  )> }
+);
+
+export type MyQuestionsQueryVariables = {
+  userId: Scalars['Int'];
+};
+
+
+export type MyQuestionsQuery = (
+  { __typename?: 'Query' }
+  & { latestQuestions: Array<(
+    { __typename?: 'Question' }
+    & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
+    & { answers: Array<(
+      { __typename?: 'Answer' }
+      & Pick<Answer, 'id' | 'content' | 'createdAt' | 'upVotes'>
+    )> }
   )> }
 );
 
@@ -584,6 +606,43 @@ export function withLatestQuestions<TProps, TChildProps = {}, TDataName extends 
     });
 };
 export type LatestQuestionsQueryResult = ApolloReactCommon.QueryResult<LatestQuestionsQuery, LatestQuestionsQueryVariables>;
+export const MyQuestionsDocument = gql`
+    query myQuestions($userId: Int!) {
+  latestQuestions(userId: $userId) {
+    id
+    title
+    content
+    createdAt
+    upVotes
+    answers {
+      id
+      content
+      createdAt
+      upVotes
+    }
+  }
+}
+    `;
+export type MyQuestionsComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<MyQuestionsQuery, MyQuestionsQueryVariables>, 'query'> & ({ variables: MyQuestionsQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const MyQuestionsComponent = (props: MyQuestionsComponentProps) => (
+      <ApolloReactComponents.Query<MyQuestionsQuery, MyQuestionsQueryVariables> query={MyQuestionsDocument} {...props} />
+    );
+    
+export type MyQuestionsProps<TChildProps = {}, TDataName extends string = 'data'> = {
+      [key in TDataName]: ApolloReactHoc.DataValue<MyQuestionsQuery, MyQuestionsQueryVariables>
+    } & TChildProps;
+export function withMyQuestions<TProps, TChildProps = {}, TDataName extends string = 'data'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  MyQuestionsQuery,
+  MyQuestionsQueryVariables,
+  MyQuestionsProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withQuery<TProps, MyQuestionsQuery, MyQuestionsQueryVariables, MyQuestionsProps<TChildProps, TDataName>>(MyQuestionsDocument, {
+      alias: 'myQuestions',
+      ...operationOptions
+    });
+};
+export type MyQuestionsQueryResult = ApolloReactCommon.QueryResult<MyQuestionsQuery, MyQuestionsQueryVariables>;
 export const PostCommentDocument = gql`
     mutation postComment($answerId: Int!, $content: String!) {
   commentAnswer(answerId: $answerId, content: $content) {

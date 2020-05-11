@@ -8,6 +8,7 @@ namespace GraphOverflow.Services
   public interface IQuestionService
   {
     Task<IEnumerable<QuestionDto>> FindLatestQuestions();
+    Task<IEnumerable<QuestionDto>> FindLatestQuestionsByUserId(int userId);
     Task<IEnumerable<QuestionDto>> FindQuestionsByTagId(int tagId);
     Task<QuestionDto> FindQuestionById(int id);
     Task<QuestionDto> FindQuestionForAnswer(AnswerDto answer);

@@ -1,4 +1,4 @@
-query latestQuestions{
+query latestQuestions {
     latestQuestions {
         id
         title

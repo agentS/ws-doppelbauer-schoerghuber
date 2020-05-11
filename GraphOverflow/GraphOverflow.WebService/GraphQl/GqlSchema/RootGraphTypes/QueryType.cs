@@ -56,7 +56,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 
       Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
         name: "latestQuestions",
-        resolve: ResolveLatestQuestions
+        resolve: ResolveLatestQuestions,
+        arguments: new QueryArguments(new QueryArgument<IntGraphType>
+        {
+          Name = "userId",
+          DefaultValue = (-1),
+          Description = "ID of the user to fetch questions for"
+        })
       ).Description = "load all questions";
 
       Field<NonNullGraphType<QuestionType>>(
@@ -95,7 +101,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
 
     private async Task<object> ResolveLatestQuestions(IResolveFieldContext<object> context)
     {
-      return await questionService.FindLatestQuestions();
+      int userId = (int) context.Arguments["userId"];
+      if (userId != (-1))
+      {
+        return await questionService.FindLatestQuestions();
+      }
+      else
+      {
+        return await questionService.FindLatestQuestionsByUserId(userId);
+      }
     }
 
     private async Task<object> ResolveQuestion(IResolveFieldContext<object> context)

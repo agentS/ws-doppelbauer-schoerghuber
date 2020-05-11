@@ -1,5 +1,6 @@
 ﻿using GraphOverflow.Domain;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GraphOverflow.Dal
@@ -7,6 +8,8 @@ namespace GraphOverflow.Dal
   public interface IAnswerDao
   {
     Task<IEnumerable<Answer>> FindLatestQuestions();
+    Task<IEnumerable<Answer>> FindLatestQuestionsByUserId(int userId);
+    Task<IEnumerable<Answer>> FindAnswersByIds(IEnumerable<int> questionIds);
     Task<IEnumerable<Answer>> FindQuestionsByTagId(int tagId);
     Task<IEnumerable<Answer>> FindAnswersByQuestionId(int questionId);
     Task<Answer> FindAnswerById(int answerId);

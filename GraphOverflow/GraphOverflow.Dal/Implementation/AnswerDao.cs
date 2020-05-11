@@ -57,6 +57,89 @@ namespace GraphOverflow.Dal.Implementation
       }
     }
 
+    public async Task<IEnumerable<Answer>> FindLatestQuestionsByUserId(int userId)
+    {
+      const string QUERY = @"
+        SELECT a.id, a.title, a.content, a.created_at,
+       (select count(*) from answer_up_vote where answer_id = a.id) as up_votes
+        FROM answer a
+        WHERE a.question_id IS NULL AND a.user_id = @userId
+        ORDER BY a.created_at DESC
+      ";
+      await using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        await using (var command = new NpgsqlCommand(QUERY, connection))
+        {
+          command.Parameters.AddWithValue("userId", userId);
+          await using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+          {
+            IList<Answer> questions = new List<Answer>();
+            while (await reader.ReadAsync())
+            {
+              var id = (int)reader["id"];
+              var title = (string)reader["title"];
+              var content = (string)reader["content"];
+              var createdAt = (DateTime)reader["created_at"];
+              var upVotes = (long)reader["up_votes"];
+              questions.Add(new Answer()
+              {
+                Id = id,
+                Title = title,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVotes = upVotes
+              });
+            }
+
+            return questions;
+          }
+        }
+      }
+    }
+
+    public async Task<IEnumerable<Answer>> FindAnswersByIds(IEnumerable<int> questionIds)
+    {
+      const string QUERY = @"
+        SELECT a.id AS id, a.content, a.created_at, a.user_id, a.question_id,
+          (SELECT count(*) FROM answer_up_vote WHERE answer_id = a.id) AS up_votes
+        FROM answer AS a
+        WHERE a.question_id = ANY(@questionIds)
+      ";
+      IList<Answer> answers = new List<Answer>();
+      await using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        await using (var command = new NpgsqlCommand(QUERY, connection))
+        {
+          command.Parameters.AddWithValue("questionIds", questionIds.ToArray());
+          await using (NpgsqlDataReader reader = await command.ExecuteReaderAsync())
+          {
+            while (await reader.ReadAsync())
+            {
+              var id = (int) reader["id"];
+              var userId = (int) reader["user_id"];
+              var content = (string) reader["content"];
+              var createdAt = (DateTime) reader["created_at"];
+              var upVotes = (long) reader["up_votes"];
+              var questionId = (int) reader["question_id"];
+              answers.Add(new Answer
+              {
+                Id = id,
+                Content = content,
+                CreatedAt = createdAt,
+                UpVotes = upVotes,
+                QuestionId = questionId,
+                UserId = userId
+              });
+            }
+          }
+        }
+      }
+
+      return answers;
+    }
+
     public async Task<IEnumerable<Answer>> FindQuestionsByTagId(int tagId)
     {
       IList<Answer> tags = new List<Answer>();
