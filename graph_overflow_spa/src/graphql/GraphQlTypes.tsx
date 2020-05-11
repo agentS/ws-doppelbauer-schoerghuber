@@ -188,6 +188,7 @@ export type MutationUpVoteQuestionArgs = {
 export type QuestionInput = {
   title: Scalars['String'];
   content: Scalars['String'];
+  tags: Array<Scalars['String']>;
 };
 
 export type AuthPayload = {
@@ -234,6 +235,7 @@ export type AnswerQuestionMutation = (
 export type AskQuestionMutationVariables = {
   title: Scalars['String'];
   content: Scalars['String'];
+  tags: Array<Scalars['String']>;
 };
 
 
@@ -269,7 +271,10 @@ export type FetchQuestionQuery = (
   & { question: (
     { __typename?: 'Question' }
     & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
-    & { upVoteUsers: Array<(
+    & { tags: Array<(
+      { __typename?: 'Tag' }
+      & Pick<Tag, 'id' | 'name'>
+    )>, upVoteUsers: Array<(
       { __typename?: 'User' }
       & Pick<User, 'id' | 'name'>
     )>, user: (
@@ -437,8 +442,8 @@ export function withAnswerQuestion<TProps, TChildProps = {}, TDataName extends s
 export type AnswerQuestionMutationResult = ApolloReactCommon.MutationResult<AnswerQuestionMutation>;
 export type AnswerQuestionMutationOptions = ApolloReactCommon.BaseMutationOptions<AnswerQuestionMutation, AnswerQuestionMutationVariables>;
 export const AskQuestionDocument = gql`
-    mutation askQuestion($title: String!, $content: String!) {
-  askQuestion(question: {title: $title, content: $content}) {
+    mutation askQuestion($title: String!, $content: String!, $tags: [String!]!) {
+  askQuestion(question: {title: $title, content: $content, tags: $tags}) {
     id
   }
 }
@@ -502,6 +507,10 @@ export const FetchQuestionDocument = gql`
     content
     createdAt
     upVotes
+    tags {
+      id
+      name
+    }
     upVoteUsers {
       id
       name

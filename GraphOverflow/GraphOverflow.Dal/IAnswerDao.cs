@@ -16,5 +16,6 @@ namespace GraphOverflow.Dal
     Task<bool> Update(Answer question);
     Task<bool> AddUpVote(Answer question, User user);
     Task<int> CreateAnswer(string content, int questionId, int userId);
+    Task<bool> AddTag(Answer question, Tag tag);
   }
 }

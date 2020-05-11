@@ -354,5 +354,25 @@ namespace GraphOverflow.Dal.Implementation
         }
       }
     }
+
+    public async Task<bool> AddTag(Answer question, Tag tag)
+    {
+      const string STATEMENT = @"
+        INSERT INTO tag_answer(tag_id, answer_id)
+        VALUES (@tag_id, @answer_id)
+      ";
+      using (var connection = new NpgsqlConnection(this.connectionString))
+      {
+        await connection.OpenAsync();
+        using (var command = new NpgsqlCommand(STATEMENT, connection))
+        {
+          command.Parameters.AddWithValue("tag_id", tag.Id);
+          command.Parameters.AddWithValue("answer_id", question.Id);
+
+          var result = await command.ExecuteNonQueryAsync();
+          return result > 0;
+        }
+      }
+    }
   }
 }

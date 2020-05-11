@@ -1,5 +1,5 @@
-mutation askQuestion($title: String!, $content: String!) {
-  askQuestion(question: { title: $title, content: $content }) {
+mutation askQuestion($title: String!, $content: String!, $tags: [String!]!) {
+  askQuestion(question: { title: $title, content: $content, tags: $tags }) {
     id
   }
 }

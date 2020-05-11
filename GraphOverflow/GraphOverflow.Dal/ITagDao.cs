@@ -8,5 +8,6 @@ namespace GraphOverflow.Dal
   {
     Task<IEnumerable<Tag>> FindByPartialName(string tagName);
     Task<IEnumerable<Tag>> FindByAnswer(int answerId);
+    Task<Tag> FindByName(string tagName);
   }
 }
