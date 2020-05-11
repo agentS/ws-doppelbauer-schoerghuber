@@ -1,0 +1,10 @@
+mutation upVoteQuestion($questionId: Int!) {
+  upVoteQuestion(questionId: $questionId) {
+    id
+    upVotes
+    upVoteUsers {
+      id
+      name
+    }
+  }
+}

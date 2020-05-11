@@ -7,18 +7,29 @@ import { isLoggedIn } from "../authentication/AuthenticationUtils";
 
 import CommentDisplay from "./CommentDisplay";
 import PostComment from "./PostComment";
+import UpVoteButton, { UpVoteButtonMode, UpVoteCallback } from "./UpVoteButton";
 
 interface AnswerDisplayProperties {
-    answer: Answer
+    answer: Answer;
+    onUpVoteAnswer: UpVoteCallback;
 }
 interface AnswerDisplayState {}
 
 class AnswerDisplay extends React.Component<AnswerDisplayProperties, AnswerDisplayState> {
+
     render() {
         return (
             <div>
                 <Row>
-                    <Col xs={2}></Col>
+                    <Col xs={2}>
+                        <p>{this.props.answer.upVotes} upvote(s)</p>
+                        <UpVoteButton
+                            mode={UpVoteButtonMode.ANSWER}
+                            postId={parseInt(this.props.answer.id)}
+                            upVoteUsers={this.props.answer.upVoteUsers}
+                            onUpvote={(answerId, newUpVoteCount, newUpVoteUsers) => this.props.onUpVoteAnswer(answerId, newUpVoteCount, newUpVoteUsers)}
+                        />
+                    </Col>
                     <Col>
                         <p>{this.props.answer.content}</p>
                         <p>Answered by {this.props.answer.user.name} at {formatDateTime(this.props.answer.createdAt)}</p>

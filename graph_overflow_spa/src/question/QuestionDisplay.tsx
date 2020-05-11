@@ -1,14 +1,15 @@
 import React from "react";
 import { Row, Col } from "react-bootstrap";
 import { withRouter, RouteComponentProps } from "react-router-dom";
+import update from "immutability-helper";
 
-import { FetchQuestionComponent, Question, Answer } from "../graphql/GraphQlTypes";
+import { FetchQuestionComponent, User, Question, Answer } from "../graphql/GraphQlTypes";
 import { formatDateTime } from "../DateTimeUtilities";
 import { isLoggedIn } from "../authentication/AuthenticationUtils";
 
 import AnswerDisplay from "./AnswerDisplay";
 import PostAnswer from "./PostAnswer";
-import UpVoteButton from "./UpVoteButton";
+import UpVoteButton, { UpVoteButtonMode } from "./UpVoteButton";
 
 interface QuestionDisplayProperties extends RouteComponentProps {
     questionId: number;
@@ -25,6 +26,45 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
         this.state = {
             question: null
         };
+    }
+
+    onUpVoteQuestion(questionId: number, newUpVoteCount: number, newUpVoteUsers: User[]) {
+        if (this.state.question) {
+            this.setState({
+                question: update(
+                    this.state.question,
+                    {
+                        upVotes: { $set: newUpVoteCount },
+                        upVoteUsers: { $set: newUpVoteUsers }
+                    }
+                )
+            });
+        }
+    }
+
+    onUpVoteAnswer(answerId: number, newUpVoteCount: number, newUpVoteUsers: User[]) {
+        if (this.state.question) {
+            const modifiedAnswerIndex = this.state.question.answers
+                .findIndex(answer => parseInt(answer.id) === answerId);
+            if (modifiedAnswerIndex && modifiedAnswerIndex !== (-1)) {
+                const newAnswer = update(
+                    this.state.question.answers[modifiedAnswerIndex],
+                    {
+                        upVotes: { $set: newUpVoteCount },
+                        upVoteUsers: { $set: newUpVoteUsers }
+                    }
+                );
+                console.log(newAnswer);
+                this.setState({
+                    question: update(
+                        this.state.question,
+                        {
+                            answers: { $splice: [[ modifiedAnswerIndex, 1, newAnswer ]] } 
+                        }
+                    )
+                });
+            }
+        }
     }
 
     render() {
@@ -53,12 +93,12 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
                     <Row>
                         <Col xs={2}>
                             <p>{this.state.question.upVotes} upvote(s)</p>
-                            <div>
-                                <UpVoteButton
-                                    questionId={parseInt(this.state.question.id)}
-                                    upVotes={this.state.question.upVotes}
-                                />
-                            </div>
+                            <UpVoteButton
+                                mode={UpVoteButtonMode.QUESTION}
+                                postId={parseInt(this.state.question.id)}
+                                upVoteUsers={this.state.question.upVoteUsers}
+                                onUpvote={(questionId, newUpVoteCount, newUpVoteUsers) => this.onUpVoteQuestion(questionId, newUpVoteCount, newUpVoteUsers)}
+                            />
                         </Col>
                         <Col>
                             <h4>{this.state.question.title}</h4>
@@ -70,7 +110,10 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
 
                     {this.state.question.answers.map(answer => (
                         <div key={answer.id}>
-                            <AnswerDisplay answer={answer as Answer} />
+                            <AnswerDisplay
+                                answer={answer as Answer}
+                                onUpVoteAnswer={(answerId, newUpVoteCount, newUpVoteUsers) => this.onUpVoteAnswer(answerId, newUpVoteCount, newUpVoteUsers)}
+                            />
                             <hr />
                         </div>
                     ))}

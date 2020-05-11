@@ -51,7 +51,7 @@ namespace GraphOverflow.Services.Implementation
       var question = await answerDao.FindQuestionById(questionId);
       if (question != null)
       {
-        await answerDao.AddUpVoat(new Answer { Id = question.Id }, new User { Id = userId });
+        await answerDao.AddUpVote(new Answer { Id = question.Id }, new User { Id = userId });
         question = await answerDao.FindQuestionById(question.Id); // reload
       }
       return MapQuestion(question);

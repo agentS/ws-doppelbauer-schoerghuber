@@ -5,6 +5,10 @@ query fetchQuestion($questionId: Int!) {
     content
     createdAt
     upVotes
+    upVoteUsers {
+      id
+      name
+    }
     user {
       name
     }
@@ -13,6 +17,10 @@ query fetchQuestion($questionId: Int!) {
       content
       createdAt
       upVotes
+      upVoteUsers {
+        id
+        name
+      }
       user {
         id
         name
