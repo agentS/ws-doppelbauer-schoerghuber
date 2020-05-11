@@ -9,6 +9,7 @@ using GraphOverflow.WebService.GraphQl.Extensions;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InputGraphTypes;
 using GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes;
 using GraphQL;
+using GraphQL.Language.AST;
 using GraphQL.Types;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
@@ -75,15 +76,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       upVoteAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
       upVoteAnswerField.Description = "upVote answer";
 
-      var addQuestionField = Field<QuestionType>(
-        name: "addQuestion",
+      var askQuestionField = Field<QuestionType>(
+        name: "askQuestion",
         arguments: new QueryArguments(
           new QueryArgument<NonNullGraphType<QuestionInputGraphType>> { Name = "question" }
         ),
-        resolve: ResolveAddQuestion
+        resolve: ResolveAskQuestion
       );
-      addQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
-      addQuestionField.Description = "adds a question";
+      askQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      askQuestionField.Description = "adds a question";
 
       var answerQuestionField = Field<AnswerType>(
         name: "answerQuestion",
@@ -141,7 +142,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       return updatedQuestion;
     }
 
-    public async Task<object> ResolveAddQuestion(IResolveFieldContext<object> context)
+    public async Task<object> ResolveAskQuestion(IResolveFieldContext<object> context)
     {
       GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
       QuestionInputDto question = context.GetArgument<QuestionInputDto>("question");

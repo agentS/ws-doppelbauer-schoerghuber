@@ -184,9 +184,11 @@ namespace GraphOverflow.Dal.Implementation
     public async Task<Answer> FindQuestionById(int questionId)
     {
       IList<Answer> answers = new List<Answer>();
-      string sql = "select id, title, content, question_id, created_at, user_id " +
-        "(select count(*) from answer_up_vote where answer_id = @id) AS up_votes " +
-        "from answer where id = @id";
+      string sql = @"
+        SELECT id, title, content, question_id, created_at, user_id,
+               (select count(*) from answer_up_vote where answer_id = @id) AS up_votes
+        from answer where id = @id
+      ";
       await using (var conn = new NpgsqlConnection(this.connectionString))
       {
         await conn.OpenAsync();

@@ -1,0 +1,9 @@
+query latestQuestions{
+    latestQuestions {
+        id
+        title
+        content
+        createdAt
+        upVotes
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using GraphOverflow.Dtos.Input;
+using GraphQL.Language.AST;
 using GraphQL.Types;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.InputGraphTypes
@@ -18,7 +19,9 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.InputGraphTypes
 
     private void InitializeFields()
     {
-      Field<NonNullGraphType<StringGraphType>>(name: "userName");
+      Field<NonNullGraphType<StringGraphType>>(
+        name: "userName"
+      );
       Field<NonNullGraphType<StringGraphType>>(name: "password");
     }
   }
