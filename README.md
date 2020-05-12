@@ -7,7 +7,9 @@ Alex
 Unsere Anwendung ist als Client-Server-System realisiert.
 Der Server ist dabei mit dem ASP.NET Core und [GraphQL Server](https://github.com/graphql-dotnet/server/) realisiert, während der Client als SPA mit [React](https://www.reactjs.org/), TypeScript und dem [Apollo-Client für React](https://www.apollographql.com/docs/react/) entwickelt ist.
 
-Lukas
+Als Datenbank kommt PostgreSQL zum Einsatz und der Server ist erneut als dreischichtige Anwendung realisiert.
+
+Alex --> bitte kleine Skizze zeichnen
 
 # Setup
 
@@ -503,15 +505,388 @@ class PostComment extends React.Component<PostCommentProperties, PostCommentStat
 
 # Subscriptions
 
-Lukas --> Detailseite für eine Frage detailliert erklären
+Die Anwendung verwendet Subscriptions, um neue Antworten und neue Kommentare zu Antworten für jeweils eine Fragen vom Server an den Client zu pushen.
+Der Client kann diese dann direkt anzeigen, ohne das ein Refresh der Seite erforderlich ist.
+Die Nachrichten werden dabei über eine Web-Socket-Verbindung übertragen, was bereits im Setup-Kapitel erwähnt wird.
 
 ## Server
 
-Lukas
+Um Subscriptions am Server zu ermöglichen, muss das Projekt [GraphQL Server](https://github.com/graphql-dotnet/server/) verwendet werden, was bereits im Setup-Kapitel erwähnt wurde.
+Subscriptions werden von [GraphQL.NET](https://graphql-dotnet.github.io/), auf welchem GraphQL Server basiert, über die Schnittstelle `IObservable<T>` unterstützt.
+
+Um Subscriptions zu ermöglichen, sind nun Änderungen an zwei Stellen erforderlich:
+
+1. Es müssen ein Resolver und ein Subscriber für die Subscription implementiert werden
+2. Die Geschäftslogikschicht muss so erweitert werden, dass eine Instanz, welche `IObservable<T>` implementiert, zur Verfügung steht. Über diese Instanz kann der Server anschließend Änderungen an den Client pushen
+
+### Resolver und Subscriber
+
+Um einen neuen Resolver und Subscriber implementieren zu können, müssen diese im Wurzeltypen für Subscriptions, der Klasse `SubscriptionType` definiert werden.
+Pro Subscription muss nun ein Feld hinzugefügt werden, in welchem Name der Subscription, Ergebnistyp, Argumente, Resolver und Subscriber festgelegt werden.
+Beispielsweise kann dies zur Benachrichtigung für neue Antworten auf eine bestimmte Frage wie in dem unten folgenden Quellcodeauszug implementiert werden.
+
+```c#
+public class SubscriptionType : ObjectGraphType
+{
+	private readonly ICommentService commentService;
+	private readonly IAnswerService answerService;
+
+	public SubscriptionType(IAnswerService answerService, ICommentService commentService)
+	{
+		this.answerService = answerService;
+		this.commentService = commentService;
+		// ...
+		InitializeFields();
+	}
+
+	// ...
+
+	private void InitializeFields()
+	{
+		AddField(new EventStreamFieldType
+		{
+			Name = "answerAdded",
+			Type = typeof(AnswerType),
+			Arguments = new QueryArguments(
+				new QueryArgument<NonNullGraphType<IntGraphType>>
+				{
+					Name = "questionId",
+					Description = "ID of the question to listen to new answers for"
+				}
+			),
+			Resolver = new FuncFieldResolver<AnswerDto>(ResolveAnswerAdded),
+			Subscriber = new EventStreamResolver<AnswerDto>(SubscribeForNewAnswers)
+		});
+		// ...
+	}
+}
+```
+
+Als Nächstes müssen nun Resolver und Subscriber implementiert werden.
+
+Der Subscriber ist für das Registrieren neuer Clients am Event-Stream verantwortlich und ist so implementiert, dass auf die Instanz von `IObservable<T>` des Services der Geschäftslogik, welcher in Kürze erlautert wird, eine Filterung nach der ID der Frage über LINQ durchgeführt wird.
+Das weitere Management der Subscription übernimmt GraphQL Server.
+Die Implementierung ist im folgenden Snippet angegeben.
+
+```c#
+public class SubscriptionType : ObjectGraphType
+{
+	// ...
+	private IObservable<AnswerDto> SubscribeForNewAnswers(IResolveFieldContext context)
+	{
+		int questionId = (int)context.Arguments["questionId"];
+		return answerService.Answers()
+			.Where(answer => answer.QuestionId == questionId);
+	}
+	// ...
+}
+```
+
+Der Resolver an sich kann auf relativ einfache Weise implementiert werden, da nur das DTO aus dem Kontext geladen wird und als Rückgabewert geliefert wird, wie beispielsweise das folgende Snippet für den Resolver für neue Antworten zeigt.
+
+```c#
+public class SubscriptionType : ObjectGraphType
+{
+	// ...
+	private AnswerDto ResolveAnswerAdded(IResolveFieldContext context)
+	{
+		var answer = context.Source as AnswerDto;
+		return answer;
+	}
+	// ...
+}
+```
+
+### Geschäftslogik
+
+Auf Seite der Geschäftslogik ist eine Implementierung von `IObservable<T>` zur Verfügung zu stellen, welche es ermöglicht, Subscriber bei neuen Events zu benachrichtigen.
+Da der Service der Geschäftslogik auch Producer der Events ist, kann hiefür eine Instanz, welche das Interface `ISubject<T>`, welches von den [Reactive Extensions for .NET](https://github.com/dotnet/reactive) bereitgestellt wird, verwendet werden.
+
+So wird beispielsweise im Service für Antworten eine Instanz von `Subject<AnswerDto>` verwendet, um Subscribern das Registrieren auf neue Antworten zu ermöglichen und die Subscriber auch bei neuen Antworten zu benachrichtigen.
+Der folgende Quellcodeauszug zeigt die Implementierung dieses Prinzips.
+Im Konstruktor wird eine neue Instanz von `Subject<AnswerDto` erzeugt.
+Dieses wird dann in der Implementierung der Methode `IObservable<AnswerDto> Answers()` als `Observable<AnswerDto` an Subscriber übergeben.
+Bei neu hinzugefügten Nachrichten werden mittels Aufruf von der Methode `OnNext` des Subjects die Subscriber über das Ereignis benachrichtigt.
+
+```c#
+public interface IAnswerService
+{
+	// ...
+	IObservable<AnswerDto> Answers();
+	// ...
+}
+
+public class AnswerService : IAnswerService
+{
+	private readonly IAnswerDao answerDao;
+	private readonly ISubject<AnswerDto> answerStream;
+
+	public AnswerService(IAnswerDao answerDao)
+	{
+		this.answerDao = answerDao;
+		this.answerStream = new Subject<AnswerDto>();
+	}
+
+	// ...
+
+	public IObservable<AnswerDto> Answers()
+	{
+		return answerStream.AsObservable();
+	}
+
+	public async Task<AnswerDto> CreateAnswer(string content, int questionId, int userId)
+	{
+		int id = await answerDao.CreateAnswer(content, questionId, userId);
+		Answer answer = await answerDao.FindAnswerById(id);
+		var dto = MapAnswer(answer);
+		answerStream.OnNext(dto);
+		return dto;
+	}
+
+	// ...
+}
+```
 
 ## Client
 
-Lukas
+Um Subscriptions auf Client-Seite zu ermöglichen, muss ein Web-Socket-Link für den Apollo-Client definiert werden, wie es bereits im Kapitel zum Client-Setup beschrieben wurde.
+
+Die Komponenten für die Subscriptions werden erneut mit dem GraphQL-Code-Generator aus einer GraphQL-Subscription, welche in einer Datei mit der Endung `.graphql` im Verzeichnis `src/graphql` gespeichert ist, erzeugt.
+Beispielsweise hat die Datei für die Subscription für neue Nachrichten den unten zu sehenden Inhalt.
+
+```graphql
+subscription answerAdded($questionId: Int!) {
+	answerAdded(questionId: $questionId) {
+		id
+		content
+		createdAt
+		upVotes
+		upVoteUsers {
+			id
+			name
+		}
+		user {
+			id
+			name
+		}
+		comments {
+			id
+			content
+			createdAt
+			user {
+				id
+				name
+			}
+		}
+	}
+}
+```
+
+Aus dieser wird nun vom Codegenerator die Komponente `AnswerAddedComponent` erzeugt, die nun in der Komponente zur Anzeige einer Frage mit allen Antworten und Kommentaren namens `QuestionPage` eingebunden werden kann.
+
+Die Komponente `QuestionPage` verwaltet den Zustand der Frage mit all ihren Upvotes, Antworten und Kommentaren.
+Die Komponente `QuestionPage` lädt zu Beginn den aktuellen Zustand einer Frage mittels der Komponente `FetchQuestionComponent`.
+
+Ist der Zustand einmal initialisiert, wird die Frage mittels spezieller Komponenten visualisiert.
+Zusätzlich werden die Komponenten `AnswerAddedComponent` und `CommentAddedComponent` in das Rendering eingebunden, welche beim Rendern eine Verbindung zu den Subscriptions auf der Serverseite herstellen.
+
+Innerhalb der Komponenten `AnswerAddedComponent` und `CommentAddedComponent` kann dabei auf von diesen Komponenten zur Verfügung gestellte Datenkomponenten zugegriffen werden, die mit jedem Event aktualisiert werden und somit eine Verarbeitung des Events auf Client-Seite ermöglichen.
+
+So wird beispielsweise im folgenden Quellcodesnippet neben Debuginformationen bei einer Benachrichtigung über eine neue Antwort die Methode `onNewAnswer` aufgerufen, welche den Zustand der Komponente `QuestionPage` so aktualisiert, dass mittels eines Immutability-Helpers die neue Antwort in den Zustand aufgenommen wird und somit gerendert wird.
+Ebenso wird der Benutzer bei Verbindungsabrissen benachrichtigt.
+
+```tsx
+import update from "immutability-helper";
+
+import {
+	FetchQuestionComponent,
+	AnswerAddedComponent, CommentAddedComponent,
+	User, Question, Answer, Comment
+} from "../graphql/GraphQlTypes";
+
+interface QuestionPageProperties extends RouteComponentProps {
+	questionId: number;
+}
+
+interface QuestionPageState {
+	question: (Question | null);
+}
+
+class QuestionPage extends React.Component<QuestionPageProperties, QuestionPageState> {
+	constructor(properties: QuestionPageProperties) {
+		super(properties);
+
+		this.state = {
+			question: null
+		};
+	}
+
+	// ...
+
+	onNewAnswer(newAnswer: Answer) {
+		if (
+			(this.state.question)
+			&& (!this.state.question.answers.find(answer => answer.id === newAnswer.id))
+		) {
+			this.setState({
+				question: update(
+					this.state.question,
+					{
+						answers: { $push: [ newAnswer ] }
+					}
+				)
+			});
+		}
+	}
+
+	// ...
+
+	render() {
+		if (this.state.question === null) {
+			return (
+				<FetchQuestionComponent variables={{ questionId: this.props.questionId }}
+					onCompleted={(result) =>  this.setState({ question: result.question as Question })}
+				>
+					{({ loading, error, data }) => {
+						if (loading) {
+							return (<h3>Loading question</h3>);
+						}
+
+						if (error || !data) {
+							return (<h3>could not load question</h3>);
+						}
+
+						return (<h3>Loading finished</h3>);
+					}}
+				</FetchQuestionComponent>
+			);
+		} else {
+			return (
+				<div>
+					<AnswerAddedComponent
+						variables={{ questionId: parseInt(this.state.question.id) }}
+						shouldResubscribe={true}
+						onSubscriptionComplete={() => console.log("Subscribing for latest answers")}
+					>
+						{({ loading, error, data}) => {
+							if (loading) {
+								console.log("Started subscribing for latest answers");
+							}
+							if (error) {
+								alert("Could not subscribe to the latest answers!");
+								console.error(error);
+							}
+
+							if (data && data.answerAdded) {
+								this.onNewAnswer(data.answerAdded as Answer);
+							}
+							return (<span></span>);
+						}}
+					</AnswerAddedComponent>
+					
+					{ /* ... */}
+
+					<QuestionDisplay question={this.state.question}
+						onUpVoteQuestion={(answerId, newUpVoteCount, newUpVoteUsers) => this.onUpVoteQuestion(answerId, newUpVoteCount, newUpVoteUsers)}
+						onUpVoteAnswer={(answerId, newUpVoteCount, newUpVoteUsers) => this.onUpVoteAnswer(answerId, newUpVoteCount, newUpVoteUsers)}
+					/>
+				</div>
+			);
+		}
+	}
+}
+```
+
+Die besondere Flexibilität der Abfragesprache GraphQL wird ausgenutzt, um für neue Kommentare nur eine Subscription zu benötigten, obwohl es pro Antwort beliebig viele Kommentare geben kann.
+In der Definition der Subscription, welche im folgenden Quellcodelisting gezeigt wird, wird angegeben, dass zusätzlich zum neuesten Kommentar auch die ID der Antwort, zu welcher dieses Kommentar gehört, geladen werden soll.
+
+```graphql
+subscription commentAdded($questionId: Int!) {
+	commentAddedToAnswerOfQuestion(questionId: $questionId) {
+		id
+		content
+		createdAt
+		user {
+			id
+			name
+		}
+		answer {
+			id
+		}
+	}
+}
+```
+
+Die ID der Antwort wird nun in der Handler-Methode für das Einfügen eines neuen Kommentars genutzt, um die zugehörige Antwort zu finden, wie im folgenden Listing ersichtlich ist.
+
+```tsx
+class QuestionPage extends React.Component<QuestionPageProperties, QuestionPageState> {
+	// ...
+
+	onNewComment(newComment: Comment) {
+		if (this.state.question) {
+			const answer = this.state.question.answers.find(answer => answer.id === newComment.answer.id);
+			if (
+				(answer)
+				&& (!answer.comments.find(comment => comment.id === newComment.id))
+			) {
+				const nextAnswer = update(
+					answer,
+					{
+						comments: { $push: [ newComment ] }
+					}
+				);
+				const answerIndex = this.state.question.answers.indexOf(answer);
+				this.setState({
+					question: update(
+						this.state.question,
+						{
+							answers: { $splice: [[ answerIndex, 1, nextAnswer ]] }
+						}
+					)
+				});
+			}
+		}
+	}
+
+	// ...
+
+	render() {
+		if (this.state.question === null) {
+			// ...
+		} else {
+			return (
+				<div>
+					{ /* ... */ }
+
+					<CommentAddedComponent
+						variables={{ questionId: parseInt(this.state.question.id) }}
+						shouldResubscribe={true}
+						onSubscriptionComplete={() => console.log("Subscribing for latest comments")}
+					>
+						{({ loading, error, data }) => {
+							if (loading) {
+								console.log("Started subscribing for latest comments");
+							}
+							if (error) {
+								alert("Could not subscribe to the latest comments!");
+								console.error(error);
+							}
+
+							if (data && data.commentAddedToAnswerOfQuestion) {
+								this.onNewComment(data.commentAddedToAnswerOfQuestion as Comment);
+							}
+							return (<span></span>);
+						}}
+					</CommentAddedComponent>
+					
+					{ /* ... */ }
+				</div>
+			);
+		}
+	}
+}
+```
 
 # Login
 
