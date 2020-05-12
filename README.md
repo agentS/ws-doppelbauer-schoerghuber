@@ -7,7 +7,7 @@ Alex
 Unsere Anwendung ist als Client-Server-System realisiert.
 Der Server ist dabei mit dem ASP.NET Core und [GraphQL Server](https://github.com/graphql-dotnet/server/) realisiert, während der Client als SPA mit [React](https://www.reactjs.org/), TypeScript und dem [Apollo-Client für React](https://www.apollographql.com/docs/react/) entwickelt ist.
 
-Alex
+Lukas
 
 # Setup
 
@@ -216,7 +216,7 @@ Die Implementierung der Geschäftslogik ruft eine Methode der Datenzugriffsschic
 		return answers
 			.Select(answer => MapAnswer(answer))
 			.ToLookup(answer => questions.First(question => question.Id == answer.QuestionId));
-    }
+	}
 ```
 
 Als Nächstes zeigt die Schnittstelle der Datenzugriffsschicht, dass die Methode, welche von der Geschäftslogikschicht zum Laden aller Antworten für eine Aufzählung von Frage-IDs, eine Aufzählung aller Antworten zurückliefert.
@@ -240,11 +240,102 @@ WHERE a.question_id = ANY(@questionIds)
 
 ## Client
 
-Lukas
+Für die Generierung des GraphQL-Client-Codes wird das Projekt [GraphQL-Code-Generator](https://github.com/dotansimha/graphql-code-generator) eingesetzt.
+Dieses generiert aus GraphQL-Queries React-Komponenten, mit denen diese Abfragen abgesetzt werden und die Ergebnisse dann direkt visualisiert werden können.
 
-### Detailseite für eine Frage
+Hierzu ist zu Beginn die Abfrage zu erstellen und in einer Datei mit der Endung `.graphql` im Verzeichnis `src/graphql` zu speichern.
+Z.B. ist die Abfrage zum Anzeigen der Abfragen eines Benutzers in der Datei `src/graphql/myQuestions.graphql` gespeichert, deren Inhalt im folgenden Quellcodeauszug ersichtlich ist.
 
-Lukas
+```graphql
+query myQuestions($userId: Int!) {
+  latestQuestions(userId: $userId) {
+	id
+	title
+	content
+	createdAt
+	upVotes
+	answers {
+	  id
+	  content
+	  createdAt
+	  upVotes
+	}
+  }
+}
+```
+
+Durch Ausführung des Befehls `npm run codegen` werden nun die DTOs sowie Komponenten generiert und in der Datei `src/graphql/GraphQlTypes.tsx` gespeichert.
+
+Nun kann die generierte Komponente in die Komponente zur Anzeige eingebunden werden und mit dieser die Abfrage ausgeführt werden.
+Dies wird im folgenden Quellcodeasuzug für die Komponente `MyQuestionList`, welche die generierte Komponente `MyQuestionsComponent` verwendet, demonstriert.
+Beim Rendern der Komponente wird die GraphQL-Abfrage abgesetzt, wobei die Variable `$userId` entsprechend gebunden wird.
+
+Im Body der Komponente `MyQuestionsComponent` wird zuerst überprüft, ob die Abfrage noch durchgeführt wird, einen Fehler oder ein Ergebnis zurückgeliefert hat.
+Wurde ein Ergebnis zurückgeliefert, können die Komponenten der Variable `data` verwendet werden, um die eigentliche Ausgabe zu visualisieren.
+Hierbei sind für alle Elemente enstprechende TypeScript-Interfaces vorhanden.
+Diese werden als Schnittmenge des GraphQL-Typs mit den von der Abfrage zurückgelieferten Feldern gebildet, sodass nur auf Properties zugegriffen werden kann, die auch wirklich Teil des Abfrageergebnisses sind.
+
+```tsx
+// ...
+import { MyQuestionsComponent } from "../graphql/GraphQlTypes";
+
+// ...
+
+class MyQuestionList extends React.Component<MyQuestionListProperties, MyQuestionListState> {
+	render() {
+		// ...
+		const userId = getUserId();
+		return (
+			{ /* ... */ }
+			<MyQuestionsComponent variables={{ userId: userId }}>
+				{({ loading, error, data }) => {
+					if (loading) {
+						return (<h3>Loading questions...</h3>);
+					}
+
+					if (error || !data) {
+						return (<h3>An error occured while loading the questions</h3>);
+					}
+
+					return (
+						<ListGroup>
+							{data.latestQuestions.map(question => (
+								<ListGroup.Item key={question.id}
+									action href={`/question/${question.id}`}
+								>
+									<h3>{question.title}</h3>
+									<p>{question.content}</p>
+									<p>Created at {formatDateTime(question.createdAt)}</p>
+									<hr />
+									<Row>
+										<Col xs={2} />
+										<Col><h5>Answers</h5></Col>
+									</Row>
+									{ question.answers.map(answer => (
+										<div key={answer.id}>
+											<Row>
+												<Col xs={2} />
+												<Col>
+													<p>{answer.content}</p>
+													<p>Created at {formatDateTime(answer.createdAt)}</p>
+												</Col>
+											</Row>
+											<hr />
+										</div>
+									)) }
+								</ListGroup.Item>
+							))}
+						</ListGroup>
+					);
+				}}
+			</MyQuestionsComponent>
+			{ /* ... */ }
+		);
+	}
+}
+```
+
+Dieses Prinzip kann nun auf alle Abfragen angewandt werden.
 
 # Mutations
 
@@ -254,11 +345,165 @@ Alex
 
 ## Client
 
-Lukas
+Auch der Client-Code für Mutations wird großteils aus der GraphQL-Operation generiert und anschließend werden die generierten Komponenten verwendet, um die Mutation auszuführen.
+
+### Implementierung des Upvotes
+
+Hierzu ist die Mutation ebenfalls wieder in einer Datei mit der Endung `.graphql` im Verzeichnis `src/graphql` zu speichern.
+Das folgende Quellcodestück zeigt beispielsweise die Mutation zum Upvote einer Frage.
+
+```graphql
+mutation upVoteQuestion($questionId: Int!) {
+	upVoteQuestion(questionId: $questionId) {
+		id
+		upVotes
+		upVoteUsers {
+			id
+			name
+		}
+	}
+}
+```
+
+Nun kann nach erfolgter Generierung mittels des Befehls `npm run codegen` die erzeugte Komponente wieder in die Komponente, welche den Upvote-Button realisiert, eingebunden werden, wie es der unten folgende Quellcodeauszug der Komponente `UpVoteButton` zeigt.
+
+Im Listing wird die generierte Komponente `UpVoteQuestionComponent` eingebunden, welche als Kindelement eine Funktion namens `mutate` zur Ausführung der Mutation zur Verfügung stellt.
+Ebenfalls werden für die Komponente `UpVoteQuestionComponent` die GraphQL-Variablen über Properties gesetzt.
+Diese könnten aber ebenso als Properties für die Funktion `mutate` übergeben werden.
+Sobald der Benutzer auf den Button klickt, wird im On-Click-Handler die Funktion `mutate` aufgerufen, was zur Folge hat, dass die Mutation abgesetzt wird und ein Promise zurückgeliefert wird.
+Im Fehlerfall wird der Benutzer über den Fehler informiert, während im Erfolgsfall die Ergebnisse der Mutation verarbeitet werden und über ein Callback an die übergeordneten Komponenten von `UpVoteButton` weitergegeben werden.
+
+```tsx
+// ...
+import { User, UpVoteAnswerComponent, UpVoteQuestionComponent } from "../graphql/GraphQlTypes";
+
+interface UpVoteButtonProperties {
+	mode: UpVoteButtonMode;
+	postId: number;
+	upVoteUsers: User[];
+	onUpvote: UpVoteCallback;
+}
+interface UpVoteButtonState {
+}
+
+class UpVoteButton extends React.Component<UpVoteButtonProperties, UpVoteButtonState> {
+	// ...
+	render() {
+		// ...
+		return (
+			<UpVoteQuestionComponent variables={{questionId: this.props.postId}}>
+				{mutate => 
+					<Button variant="success"
+						onClick={() => {
+							mutate()
+								.then(result => {
+									if (result.data && result.data.upVoteQuestion) {
+										this.props.onUpvote(
+											parseInt(result.data.upVoteQuestion.id),
+											result.data.upVoteQuestion.upVotes,
+											result.data.upVoteQuestion.upVoteUsers
+										);
+									} else {
+										alert("Could not up vote.");
+										console.error(result.errors);
+									}
+								})
+								.catch(exception => {
+									alert("Could not up vote.");
+									console.error(exception);
+								});
+						}}>
+						UpVote
+					</Button>
+				}
+			</UpVoteQuestionComponent>
+		);
+		// ...
+	}
+	// ...
+}
+```
+
+### Formulare
+
+Natürlich lässt sich die generierte Komponente auch sehr gut mit Formularen verwenden, wie das z.B. in der Komponente `PostComment`, welche zum Verfassen eines Kommentares dient, der Fall ist.
+
+Im unten ersichtlichen Snippet ist die GraphQL-Mutation zur Erstellung eines Kommentares aufgeführt, aus welcher die Komponente `PostCommentComponent` erzeugt wird.
+
+```graphql
+mutation postComment($answerId: Int!, $content: String!) {
+	commentAnswer(answerId: $answerId, content: $content) {
+		id
+		content
+		createdAt
+		user {
+			id
+			name
+		}
+	}
+}
+```
+
+Nach erfolgter Generierung kann das Formular von der Komponente `PostCommentComponent` umschlossen werden, damit in dem Handler für das Submit-Event die Funktion `mutate` ausgeführt werden kann, wie der unten zu sehende Quellcodeauszug verdeutlicht.
+Ebenfalls werden in diesem Fall die GraphQL-Variablenbelegungen als Parameter der Funktion `mutate` übergeben, da diese ja von Benutzereingaben abhängen.
+Auf das Ergebnis der Funktion `mutate` wird nicht reagiert, da das neue Kommentar ohnehin aufgrund der aktiven Subscription für neuen Kommentare angezeigt.
+
+```tsx
+// ...
+import { PostCommentComponent } from "../graphql/GraphQlTypes";
+
+interface PostCommentProperties {
+	answerId: number;
+}
+
+interface PostCommentState {
+	content: string;
+}
+
+class PostComment extends React.Component<PostCommentProperties, PostCommentState> {
+	// ...
+	render() {
+		return (
+			{ /* ... */ }
+			<PostCommentComponent>
+				{mutate => {
+					return (
+						<Form onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+							event.preventDefault();
+
+							mutate({ variables: {
+								answerId: this.props.answerId,
+								content: this.state.content,
+							}})
+								.then(result => {
+									alert("Comment posted");
+								})
+								.catch(exception => {
+									alert("Could not post the comment.");
+									console.error(exception);
+								});
+						}}>
+							<Form.Group controlId="comment">
+								<Form.Label>Your comment</Form.Label>
+								<Form.Control as="textarea" placeholder="Your comment..." required
+								onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => this.setContent(event.target.value)} />
+							</Form.Group>
+							<Button type="submit" variant="primary">
+								Post comment
+							</Button>
+						</Form>
+					);
+				}}
+			</PostCommentComponent>
+			{ /* ... */ }
+		);
+	}
+}
+```
 
 # Subscriptions
 
-Lukas
+Lukas --> Detailseite für eine Frage detailliert erklären
 
 ## Server
 
@@ -358,7 +603,7 @@ Nach dem Stellen der Frage wird der Benutzer auf die Seite für die Frage weiter
 ### Upvotes für Fragen
 
 Da der Benutzer nun eingeloggt ist, kann er durch Drücken des grünen Upvote-Buttons, welcher links neben der Frage in der oberen Abbildung zu sehen ist, einen Upvote für die Frage vergeben.
-Dies führt dazu, dass der aktuelle Upvote-Count und die Liste der Benutzer, die einen Upvote vergeben haben, als Ergebnis der GraphQL-Manipulation an den Client gesendet wird und dieser die Anzeige enstprechend aktualisiert, sodass die Seite nun wie unten abgebildet dargestellt wird.
+Dies führt dazu, dass der aktuelle Upvote-Count und die Liste der Benutzer, die einen Upvote vergeben haben, als Ergebnis der GraphQL-Mutation an den Client gesendet wird und dieser die Anzeige enstprechend aktualisiert, sodass die Seite nun wie unten abgebildet dargestellt wird.
 
 ![Seite für eine Frage nach einem Upvote](doc/img/questionPageAfterUpvote.png)
 
