@@ -521,7 +521,83 @@ Alex
 
 ## Client
 
-Lukas
+Um auch die direkte Verwendung des Apollo-Clients zu demonstrieren, wird die Mutation zum Login direkt im Formular für den Login ausgeführt, ohne dass auf generierte Komponenten zurückgegriffen wird.
+Allerdings werden die generierten DTOs des Schemas schon verwendet, da dadurch Codeduplizierung vermieden wird.
+Hierfür ist die GraphQL-Manipulation erneut in eine Datei mit der Endung `.graphql` im Verzeichnis `src/graphql` zu kopieren, da das Plugin zur Erkennung von GraphQL-Strings im Code nicht funktioniert hat.
+
+Um den Login zu realisieren wird eine laut [Apollo-React-Anleitung](https://www.apollographql.com/docs/react/data/mutations/#executing-a-mutation) vorgeschlagene funktionale Komponente verwendet.
+In die Komponente `Login` wird via React-Hook die Funktion `useMutation` injiziert.
+Mittels dieser wird eine Funktion `loginMutation` instanziiert, indem die Funktion `useMutation` mit der GraphQL-Mutation in Stringform als Parameter und mit den Typparemtern für Ergebnis- und Variablendatentypen ausgeprägt wird.
+
+Anschließend kann die Mutationsfunktion `loginMutation` bei Absenden des Formulars mit den Ausprägungen der GraphQL-Variablen als Parameter aufgerufen werden, um die Mutation auszuführen.
+
+All das Beschriebene ist im unten folgenden Quellcodeauszug zu sehen.
+
+```tsx
+// ...
+import gql from "graphql-tag";
+import { useMutation } from "@apollo/react-hooks";
+import { LoginMutationVariables, LoginMutation } from "../graphql/GraphQlTypes";
+
+interface LoginProperties extends RouteComponentProps {}
+
+const Login: React.FC<LoginProperties> = (props) => {
+	let username: string = "";
+	let password: string = "";
+
+	const [ loginMutation ] = useMutation<LoginMutation, LoginMutationVariables>(gql`
+		mutation login($userName: String!, $password: String!) {
+			login(loginData: {userName: $userName, password: $password}) {
+				token
+			}
+		}
+	`);
+
+	return (
+		{ /* ... */ }
+		<Form onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+			event.preventDefault();
+			const variables: LoginMutationVariables = {
+				userName: username,
+				password
+			}
+			loginMutation({ variables })
+				.then(response => {
+					if (response && response.data && response.data.login) {
+						setLoginToken(response.data.login.token);
+						props.history.push(`/`);
+					} else {
+						alert("Invalid credentials!");
+					}
+				})
+				.catch(exception => {
+					alert("Invalid credentials!");
+					console.log(exception);
+				});
+		}}>
+			<Form.Group controlId="loginFormUsername">
+				<Form.Label>Username</Form.Label>
+				<Form.Control type="text" placeholder="Username" required
+					onChange={(event: React.ChangeEvent<HTMLInputElement>) => username = event.target.value}
+				/>
+			</Form.Group>
+			<Form.Group controlId="loginFormPassword">
+				<Form.Label>Password</Form.Label>
+				<Form.Control type="password" placeholder="Password" required
+					onChange={(event: React.ChangeEvent<HTMLInputElement>) => password = event.target.value}
+				/>
+			</Form.Group>
+			<Button variant="primary" type="submit">
+				Login
+			</Button>
+		</Form>
+		{ /* ... */ }
+	);
+};
+```
+
+Nach erfolgreichem Login wird der JWT im Local-Storage des Clients abgelegt, von welchem er für die Anwendung zugreifbar ist.
+Zum Zugriff dienen die Funktionen der Datei `src/authentication/AuthenticationUtils.ts`.
 
 # Ergebnisse
 

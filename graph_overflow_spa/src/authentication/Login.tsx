@@ -4,7 +4,7 @@ import { withRouter, RouteComponentProps } from "react-router-dom";
 
 import gql from "graphql-tag";
 import { useMutation } from "@apollo/react-hooks";
-import { LoginMutationVariables, LoginMutationResult } from "../graphql/GraphQlTypes";
+import { LoginMutationVariables, LoginMutation } from "../graphql/GraphQlTypes";
 
 import { setLoginToken } from "./AuthenticationUtils";
 
@@ -14,7 +14,7 @@ const Login: React.FC<LoginProperties> = (props) => {
     let username: string = "";
     let password: string = "";
 
-    const [ loginMutation ] = useMutation(gql`
+    const [ loginMutation ] = useMutation<LoginMutation, LoginMutationVariables>(gql`
         mutation login($userName: String!, $password: String!) {
             login(loginData: {userName: $userName, password: $password}) {
                 token
@@ -34,15 +34,15 @@ const Login: React.FC<LoginProperties> = (props) => {
                 }
                 loginMutation({ variables })
                     .then(response => {
-                        const loginResult = response as LoginMutationResult;
-                        if (loginResult.data && loginResult.data.login) {
-                            setLoginToken(loginResult.data?.login?.token);
+                        if (response && response.data && response.data.login) {
+                            setLoginToken(response.data.login.token);
                             props.history.push(`/`);
                         } else {
                             alert("Invalid credentials!");
                         }
                     })
                     .catch(exception => {
+						alert("Invalid credentials!");
                         console.log(exception);
                     });
             }}>
