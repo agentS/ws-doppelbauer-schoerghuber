@@ -1,5 +1,3 @@
-using System;
-using System.Linq;
 using GraphOverflow.Services;
 using GraphOverflow.WebService.Constants;
 using GraphOverflow.WebService.GraphQl.Extensions;
@@ -59,6 +57,17 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
         resolve: ResolveLatestQuestions
       ).Description = "load all questions";
 
+      Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
+        name: "questionsByTag",
+        arguments: new QueryArguments(new QueryArgument<StringGraphType>()
+        {
+          Name = "tagName",
+          DefaultValue = string.Empty
+        }
+        ),
+        resolve: ResolveQuestionsByTag
+      ).Description = "load questions filtered by tag";
+
       Field<NonNullGraphType<QuestionType>>(
         name: "question",
         arguments: new QueryArguments(
@@ -103,6 +112,13 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.RootGraphTypes
       int questionId = (int)context.Arguments["id"];
       var question = await questionService.FindQuestionById(questionId);
       return question;
+    }
+
+    private async Task<object> ResolveQuestionsByTag(IResolveFieldContext<object> context)
+    {
+      var tagName = context.Arguments["tagName"] as string;
+      return await questionService.FindQuestionsByTagName(tagName);
+
     }
     #endregion Resolvers
   }

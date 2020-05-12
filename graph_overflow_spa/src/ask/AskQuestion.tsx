@@ -7,7 +7,8 @@ import { AskQuestionComponent } from "../graphql/GraphQlTypes";
 interface AskQuestionProperties extends RouteComponentProps {}
 interface AskQuestionState {
     title: string,
-    content: string
+    content: string,
+    tags: string[]
 }
 
 class AskQuestion extends React.Component<AskQuestionProperties, AskQuestionState> {
@@ -16,7 +17,8 @@ class AskQuestion extends React.Component<AskQuestionProperties, AskQuestionStat
 
         this.state = {
             title: "",
-            content: ""
+            content: "",
+            tags: []
         };
     }
 
@@ -32,6 +34,13 @@ class AskQuestion extends React.Component<AskQuestionProperties, AskQuestionStat
         });
     }
 
+    setTags(tags: string){
+        let tagList = tags.split(":");
+        this.setState({
+            tags: tagList
+        });
+    }
+
     render() {
         return (
             <div>
@@ -43,6 +52,7 @@ class AskQuestion extends React.Component<AskQuestionProperties, AskQuestionStat
                             mutate({ variables: {
                                 title: this.state.title,
                                 content: this.state.content,
+                                tags: this.state.tags
                             }})
                                 .then(result => {
                                     if (result.data && result.data.askQuestion) {
@@ -64,6 +74,12 @@ class AskQuestion extends React.Component<AskQuestionProperties, AskQuestionStat
                                 <Form.Label>Question</Form.Label>
                                 <Form.Control as="textarea" placeholder="Question..." required
                                     onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => this.setContent(event.target.value)}
+                                />
+                            </Form.Group>
+                            <Form.Group controlId="asktags">
+                                <Form.Label>Tags</Form.Label>
+                                <Form.Control as="textarea" placeholder="tag1:tag2" required
+                                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => this.setTags(event.target.value)}
                                 />
                             </Form.Group>
                             <Button variant="primary" type="submit">

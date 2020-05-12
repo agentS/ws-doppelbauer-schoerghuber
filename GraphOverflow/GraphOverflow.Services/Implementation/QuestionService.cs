@@ -10,9 +10,11 @@ namespace GraphOverflow.Services.Implementation
   public class QuestionService : IQuestionService
   {
     private readonly IAnswerDao answerDao;
-    public QuestionService(IAnswerDao answerDao)
+    private readonly ITagDao tagDao;
+    public QuestionService(IAnswerDao answerDao, ITagDao tagDao)
     {
       this.answerDao = answerDao;
+      this.tagDao = tagDao;
     }
 
     public async Task<QuestionDto> FindQuestionById(int id)
@@ -33,6 +35,21 @@ namespace GraphOverflow.Services.Implementation
         Content = questionDto.Content,
       };
       int questionId = await answerDao.CreateQuestion(question, new User { Id = userId });
+
+      foreach (string tag in questionDto.Tags)
+      {
+        Tag searchTag = await tagDao.FindByName(tag);
+        if (searchTag != null)
+        {
+          await answerDao.AddTag(new Answer { Id = questionId }, searchTag);
+        }
+        else
+        {
+          int tagId = await tagDao.Add(new Tag { Name = tag });
+          await answerDao.AddTag(new Answer { Id = questionId }, new Tag { Id = tagId });
+        }
+      }
+
       return MapQuestion(await answerDao.FindQuestionById(questionId));
     }
 
@@ -55,6 +72,12 @@ namespace GraphOverflow.Services.Implementation
         question = await answerDao.FindQuestionById(question.Id); // reload
       }
       return MapQuestion(question);
+    }
+
+    public async Task<IEnumerable<QuestionDto>> FindQuestionsByTagName(string tagName)
+    {
+      var questions = await answerDao.FindQuestionsByTagName(tagName);
+      return MapQuestions(questions);
     }
 
     private IEnumerable<QuestionDto> MapQuestions(IEnumerable<Answer> questions)

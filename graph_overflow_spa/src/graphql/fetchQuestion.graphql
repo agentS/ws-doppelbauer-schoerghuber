@@ -5,6 +5,10 @@ query fetchQuestion($questionId: Int!) {
     content
     createdAt
     upVotes
+    tags{
+      id
+      name
+    }
     upVoteUsers {
       id
       name

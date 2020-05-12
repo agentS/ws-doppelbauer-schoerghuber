@@ -9,6 +9,7 @@ namespace GraphOverflow.GraphQl.InputGraphTypes
         {
             Field<NonNullGraphType<StringGraphType>>(name: "title");
             Field<NonNullGraphType<StringGraphType>>(name: "content");
+            Field<NonNullGraphType<ListGraphType<NonNullGraphType<StringGraphType>>>>(name: "tags");
         }
     }
 }

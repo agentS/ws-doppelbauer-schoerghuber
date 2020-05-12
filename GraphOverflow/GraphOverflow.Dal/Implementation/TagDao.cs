@@ -97,6 +97,30 @@ namespace GraphOverflow.Dal.Implementation
       return tag;
     }
 
+    public async Task<Tag> FindByName(string tagName)
+    {
+      Tag tag = null;
+      string sql = "select id, name from tag where name = @name";
+      await using (var conn = new NpgsqlConnection(this.connectionString))
+      {
+        await conn.OpenAsync();
+        await using (var cmd = new NpgsqlCommand(sql, conn))
+        {
+          cmd.Parameters.AddWithValue("name", tagName);
+          await using (NpgsqlDataReader reader = await cmd.ExecuteReaderAsync())
+          {
+            if (await reader.ReadAsync())
+            {
+              var tagId = (int)reader["id"];
+              var name = (string)reader["name"];
+              tag = new Tag { Id = tagId, Name = name };
+            }
+          }
+        }
+      }
+      return tag;
+    }
+
     public async Task<IEnumerable<Tag>> FindByPartialName(string tagName)
     {
       IList<Tag> tags = new List<Tag>();

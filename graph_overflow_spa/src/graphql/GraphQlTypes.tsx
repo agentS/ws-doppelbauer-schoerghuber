@@ -59,6 +59,8 @@ export type Query = {
   me?: Maybe<User>;
   /** load a question */
   question: Question;
+  /** load questions filtered by tag */
+  questionsByTag: Array<Question>;
   /** get all tags that match the %tagName% */
   tags: Array<Tag>;
 };
@@ -66,6 +68,11 @@ export type Query = {
 
 export type QueryQuestionArgs = {
   id?: Maybe<Scalars['Int']>;
+};
+
+
+export type QueryQuestionsByTagArgs = {
+  tagName?: Maybe<Scalars['String']>;
 };
 
 
@@ -188,6 +195,7 @@ export type MutationUpVoteQuestionArgs = {
 export type QuestionInput = {
   title: Scalars['String'];
   content: Scalars['String'];
+  tags: Array<Scalars['String']>;
 };
 
 export type AuthPayload = {
@@ -234,6 +242,7 @@ export type AnswerQuestionMutation = (
 export type AskQuestionMutationVariables = {
   title: Scalars['String'];
   content: Scalars['String'];
+  tags: Array<Scalars['String']>;
 };
 
 
@@ -269,7 +278,10 @@ export type FetchQuestionQuery = (
   & { question: (
     { __typename?: 'Question' }
     & Pick<Question, 'id' | 'title' | 'content' | 'createdAt' | 'upVotes'>
-    & { upVoteUsers: Array<(
+    & { tags: Array<(
+      { __typename?: 'Tag' }
+      & Pick<Tag, 'id' | 'name'>
+    )>, upVoteUsers: Array<(
       { __typename?: 'User' }
       & Pick<User, 'id' | 'name'>
     )>, user: (
@@ -322,6 +334,23 @@ export type PostCommentMutation = (
       { __typename?: 'User' }
       & Pick<User, 'id' | 'name'>
     ) }
+  )> }
+);
+
+export type SearchByTagNameQueryVariables = {
+  tagName: Scalars['String'];
+};
+
+
+export type SearchByTagNameQuery = (
+  { __typename?: 'Query' }
+  & { questionsByTag: Array<(
+    { __typename?: 'Question' }
+    & Pick<Question, 'id' | 'upVotes' | 'title'>
+    & { tags: Array<(
+      { __typename?: 'Tag' }
+      & Pick<Tag, 'id' | 'name'>
+    )> }
   )> }
 );
 
@@ -437,8 +466,8 @@ export function withAnswerQuestion<TProps, TChildProps = {}, TDataName extends s
 export type AnswerQuestionMutationResult = ApolloReactCommon.MutationResult<AnswerQuestionMutation>;
 export type AnswerQuestionMutationOptions = ApolloReactCommon.BaseMutationOptions<AnswerQuestionMutation, AnswerQuestionMutationVariables>;
 export const AskQuestionDocument = gql`
-    mutation askQuestion($title: String!, $content: String!) {
-  askQuestion(question: {title: $title, content: $content}) {
+    mutation askQuestion($title: String!, $content: String!, $tags: [String!]!) {
+  askQuestion(question: {title: $title, content: $content, tags: $tags}) {
     id
   }
 }
@@ -502,6 +531,10 @@ export const FetchQuestionDocument = gql`
     content
     createdAt
     upVotes
+    tags {
+      id
+      name
+    }
     upVoteUsers {
       id
       name
@@ -619,6 +652,39 @@ export function withPostComment<TProps, TChildProps = {}, TDataName extends stri
 };
 export type PostCommentMutationResult = ApolloReactCommon.MutationResult<PostCommentMutation>;
 export type PostCommentMutationOptions = ApolloReactCommon.BaseMutationOptions<PostCommentMutation, PostCommentMutationVariables>;
+export const SearchByTagNameDocument = gql`
+    query searchByTagName($tagName: String!) {
+  questionsByTag(tagName: $tagName) {
+    id
+    upVotes
+    title
+    tags {
+      id
+      name
+    }
+  }
+}
+    `;
+export type SearchByTagNameComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<SearchByTagNameQuery, SearchByTagNameQueryVariables>, 'query'> & ({ variables: SearchByTagNameQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const SearchByTagNameComponent = (props: SearchByTagNameComponentProps) => (
+      <ApolloReactComponents.Query<SearchByTagNameQuery, SearchByTagNameQueryVariables> query={SearchByTagNameDocument} {...props} />
+    );
+    
+export type SearchByTagNameProps<TChildProps = {}, TDataName extends string = 'data'> = {
+      [key in TDataName]: ApolloReactHoc.DataValue<SearchByTagNameQuery, SearchByTagNameQueryVariables>
+    } & TChildProps;
+export function withSearchByTagName<TProps, TChildProps = {}, TDataName extends string = 'data'>(operationOptions?: ApolloReactHoc.OperationOption<
+  TProps,
+  SearchByTagNameQuery,
+  SearchByTagNameQueryVariables,
+  SearchByTagNameProps<TChildProps, TDataName>>) {
+    return ApolloReactHoc.withQuery<TProps, SearchByTagNameQuery, SearchByTagNameQueryVariables, SearchByTagNameProps<TChildProps, TDataName>>(SearchByTagNameDocument, {
+      alias: 'searchByTagName',
+      ...operationOptions
+    });
+};
+export type SearchByTagNameQueryResult = ApolloReactCommon.QueryResult<SearchByTagNameQuery, SearchByTagNameQueryVariables>;
 export const AnswerAddedDocument = gql`
     subscription answerAdded($questionId: Int!) {
   answerAdded(questionId: $questionId) {
