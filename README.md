@@ -17,6 +17,32 @@ Da uns das Setup der Projekte einige Probleme bereitet hat, möchten wir in dies
 
 Alex
 
+### Data-Loader
+
+Um die Funktionalität für den Data-Loader zu aktivieren, müssen die entsprechenden Services in den DI-Container injiziert werden.
+Hierfür kann die im unteren Snippet gezeigte Extension-Method verwendet werden.
+
+```c#
+using GraphQL.Server;
+
+namespace GraphOverflow.WebService
+{
+	public class Startup
+	{
+		// ...
+
+		public void ConfigureServices(IServiceCollection services)
+		{
+			// ...
+			services.AddDataLoader();
+			// ...
+		}
+
+		// ...
+	}
+}
+```
+
 ## Apollo-React-Client
 
 ### NPM-Packages
@@ -141,11 +167,82 @@ Alex
 
 Alex
 
+## Data-Loader
+
+Fragen und Antworten befinden sich in einer 1:N-Beziehung, was bedeutet, dass im Resolver für eine Frage die Antworten bei Anforderung des Clients nachgeladen werden.
+Dies hat jedoch den Nachteil, dass wenn der Client eine Menge an Fragen anfordert, für jede Frage einzeln eine SQL-Abfrage zum Nachladen der Antworten abgesetzt wird, was zu einem N+1-Selects-Problem führt.
+
+Da dies sehr häufig vorkommt, wird ein Data-Loader zum Laden der Antworten für eine Frage eingesetzt.
+Dieser ermöglicht es, dass das Laden der Antworten in einem Batch mit nur einem SQL-Statement erfolgt und somit wird die Anzahl der SQL-Statements konstant auf 2 reduziert: eines zum Laden der Fragen und eines zum Laden der Antworten.
+Dies funktioniert, indem der Data-Loader mittels eines SQL-Statements alle Antworten zu allen vom Client angeforderten Fragen lädt und anschließend die Antworten den entsprechenden Fragen zugeordnet werden.
+
+Als Nächstes ist in den Resolver für den Schema-Typ `QuestionType` eine Instanz der Klasse `IDataLoaderContextAccessor` zu injizieren, welche dann in der Resolver-Methode für die Antworten verwendet werden kann, um die Antworten als Batch zu laden.
+Anschließend kann mittels des Data-Loaders die Operation zum Laden der Antworten aller Fragen geschedulet werden, wie das folgende Snippet zeigt.
+
+```c#
+
+public class QuestionType : ObjectGraphType<QuestionDto>
+{
+	private object ResolveAnswers(IResolveFieldContext<QuestionDto> context)
+	{
+		var question = context.Source;
+		var answersLoader = this.dataLoaderContextAccessor.Context
+			.GetOrAddCollectionBatchLoader<QuestionDto, AnswerDto>(
+				"FindAnswersForQuestions",
+				answerService.FindAnswersForQuestions
+			);
+		return answersLoader.LoadAsync(question);
+	}
+}
+```
+
+Die Methode der Geschäftslogik muss von der Schnittstelle ebenfalls an den Data-Loader angepasst werden, wie im folgenden Quellcodeauszug zu sehen ist.
+
+```c#
+public interface IAnswerService
+{
+	Task<ILookup<QuestionDto, AnswerDto>> FindAnswersForQuestions(IEnumerable<QuestionDto> questions);
+}
+```
+
+Die Implementierung der Geschäftslogik ruft eine Methode der Datenzugriffsschicht, welche alle Antworten für eine Frage lädt, mappt diese in DTOs und transformiert die Ergebnisse anschließend in die von der Schnittstelle `ILookup` vorgegebene Datenstruktur, indem jedes Antwort-DTO seinem entsprechenden Frage-DTO zugeordnet wird..
+
+```c#
+	public async Task<ILookup<QuestionDto, AnswerDto>> FindAnswersForQuestions(IEnumerable<QuestionDto> questions)
+	{
+		IEnumerable<Answer> answers = await this.answerDao.FindAnswersByIds(
+			questions.Select(question => question.Id)
+		);
+		return answers
+			.Select(answer => MapAnswer(answer))
+			.ToLookup(answer => questions.First(question => question.Id == answer.QuestionId));
+    }
+```
+
+Als Nächstes zeigt die Schnittstelle der Datenzugriffsschicht, dass die Methode, welche von der Geschäftslogikschicht zum Laden aller Antworten für eine Aufzählung von Frage-IDs, eine Aufzählung aller Antworten zurückliefert.
+
+```c#
+public interface IAnswerDao
+{
+	Task<IEnumerable<Answer>> FindAnswersByIds(IEnumerable<int> questionIds);
+}
+```
+
+Abschließend ist noch die SQL-Abfrage, welche vom DAO-Objekt zur Laden aller Antworten auf die übergebenen Frage-IDs verwendet wird, angegeben.
+Diese Abfrage verwendet mit `ANY` eine mit [C# und ADO.NET kompatible Form](https://www.ankursheel.com/blog/query-in-clause-dapper-npgsql/) von `IN`.
+
+```sql
+SELECT a.id AS id, a.content, a.created_at, a.user_id, a.question_id,
+	(SELECT count(*) FROM answer_up_vote WHERE answer_id = a.id) AS up_votes
+FROM answer AS a
+WHERE a.question_id = ANY(@questionIds)
+```
+
 ## Client
 
 Lukas
 
-## Data-Loader
+### Detailseite für eine Frage
 
 Lukas
 
