@@ -1,3 +1,50 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Aufgabenstellung](#aufgabenstellung)
+- [Architektur](#architektur)
+- [Setup](#setup)
+	- [GraphQL Server](#graphql-server)
+		- [Data-Loader](#data-loader)
+	- [Apollo-React-Client](#apollo-react-client)
+		- [NPM-Packages](#npm-packages)
+		- [GraphQL-Client-Setup](#graphql-client-setup)
+		- [GraphQL-Client-Generator](#graphql-client-generator)
+- [Schema](#schema)
+	- [Schema mit GraphQL .NET](#schema-mit-graphql-net)
+- [Queries](#queries)
+	- [Server](#server)
+	- [Data-Loader](#data-loader-1)
+	- [Client](#client)
+- [Mutations](#mutations)
+	- [Server](#server-1)
+	- [Client](#client-1)
+		- [Implementierung des Upvotes](#implementierung-des-upvotes)
+		- [Formulare](#formulare)
+- [Subscriptions](#subscriptions)
+	- [Server](#server-2)
+		- [Resolver und Subscriber](#resolver-und-subscriber)
+		- [Geschäftslogik](#gesch%c3%a4ftslogik)
+	- [Client](#client-2)
+- [Login](#login)
+	- [Server](#server-3)
+	- [Client](#client-3)
+- [Ergebnisse](#ergebnisse)
+	- [Startseite](#startseite)
+	- [Seite für eine Frage als anonymer Benutzer](#seite-f%c3%bcr-eine-frage-als-anonymer-benutzer)
+	- [Suche nach Tags](#suche-nach-tags)
+	- [Login](#login-1)
+	- [Stellen von Fragen](#stellen-von-fragen)
+	- [Seite für eine Frage als authentifizierter Benutzer](#seite-f%c3%bcr-eine-frage-als-authentifizierter-benutzer)
+		- [Upvotes für Fragen](#upvotes-f%c3%bcr-fragen)
+		- [Antworten](#antworten)
+		- [Kommentare](#kommentare)
+		- [Upvotes für Antworten](#upvotes-f%c3%bcr-antworten)
+	- [Fragen, die der Benutzer gestellt hat](#fragen-die-der-benutzer-gestellt-hat)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Aufgabenstellung
 Q&A-Plattform GraphOverflow: Benutzer können Fragen stellen, zu welchen andere Benutzer Antworten geben können. Auf Antworten können Kommentare gegeben werden. Kommentare und Antworten können als hilfreich markiert werden, was als Sortierkriterium verwendet wird. Änderungen werden dabei an die Clients vom Server via Subscription gepusht. Darüber hinaus kann sich ein Benutzer von ihm gestellte Fragen und gegebene Antworten anzeigen lassen. Ebenso soll eine Suche das Anzeigen von Fragen für bestimmte Themen ermöglichen. Der Client wird als React-basierte SPA realisiert.
 
@@ -1401,7 +1448,7 @@ Der Gegenstand der Authentifizierung und Autorisierung von Benutzern, welche ein
 
 Wir haben uns für die spannendere Variante, die Definition auf Feldebene, entschieden. Dazu verwenden wir den GraphQL `UserContext` welcher zu Beginn einer Anfrage erstellt wird und dann für die gesamte Abarbeitungszeit der Abfrage als Daten Container zur Verfügung steht.
 
-Dieser UserContext wird zu Beginn eines HTTP Requests mittels eines Builders erstellt. Beim Erstellen kann auf den `HttpContext` des Requests zugegriffen werden. Diesen verwenden wir um den übermittelten, wenn enthalten, JWT Token auszulesen und durch den `AuthenticationService` zu validieren. Ist der Token valide wird der User mitsamt seinen Rechten/Claims im GraphQL UserContext hinterlegt. Daurch die Abfrage des Properties `User` kann später ermittelt werden, ob ein Benutzer angemeldet ist oder nicht. 
+Dieser UserContext wird zu Beginn eines HTTP Requests mittels eines Builders erstellt. Beim Erstellen kann auf den `HttpContext` des Requests zugegriffen werden. Diesen verwenden wir um den übermittelten, wenn enthalten, JWT Token auszulesen und durch den `AuthenticationService` zu validieren. Ist der Token valide wird der User mitsamt seinen Rechten/Claims im GraphQL UserContext hinterlegt. Durch die Abfrage des Properties `User` kann später ermittelt werden, ob ein Benutzer angemeldet ist oder nicht. 
 ```C#
 // ...
 .AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
@@ -1456,7 +1503,7 @@ public class GraphQlUserContext : Dictionary<string, object>
 }
 ```
 
-Weiters werden Extension Methoden definiert, welche auf den Metadaten der Felder eines GraphTypen operieren. Diese werden dazu verwendet, die benötigten Claims für das jeweilige Feld zu definieren und in den dazugehörigen Metadaten zu hinterlegen.
+Weiters werden Extension Methoden definiert, welche auf den Metadaten der Felder eines Graphtypen operieren. Diese werden dazu verwendet, die benötigten Claims für das jeweilige Feld zu definieren und in den dazugehörigen Metadaten zu hinterlegen.
 ```C#
 public static class GraphQLExtensions
 {
@@ -1529,10 +1576,6 @@ public class RequiresAuthValidationRule : IValidationRule
 
       return new EnterLeaveListener(_ =>
       {
-        // this could leak info about hidden fields in error messages
-        // it would be better to implement a filter on the schema so it
-        // acts as if they just don't exist vs. an auth denied error
-        // - filtering the schema is not currently supported
         _.Match<Field>(fieldAst =>
         {
           var fieldDef = context.TypeInfo.GetFieldDef();
