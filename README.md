@@ -1,6 +1,5 @@
 # Aufgabenstellung
-
-Alex
+Q&A-Plattform GraphOverflow: Benutzer können Fragen stellen, zu welchen andere Benutzer Antworten geben können. Auf Antworten können Kommentare gegeben werden. Kommentare und Antworten können als hilfreich markiert werden, was als Sortierkriterium verwendet wird. Änderungen werden dabei an die Clients vom Server via Subscription gepusht. Darüber hinaus kann sich ein Benutzer von ihm gestellte Fragen und gegebene Antworten anzeigen lassen. Ebenso soll eine Suche das Anzeigen von Fragen für bestimmte Themen ermöglichen. Der Client wird als React-basierte SPA realisiert.
 
 # Architektur
 
@@ -9,7 +8,7 @@ Der Server ist dabei mit dem ASP.NET Core und [GraphQL Server](https://github.co
 
 Als Datenbank kommt PostgreSQL zum Einsatz und der Server ist erneut als dreischichtige Anwendung realisiert.
 
-Alex --> bitte kleine Skizze zeichnen
+![Skizze der Architektur](doc/img/architecture.png)
 
 # Setup
 
@@ -17,7 +16,67 @@ Da uns das Setup der Projekte einige Probleme bereitet hat, möchten wir in dies
 
 ## GraphQL Server
 
-Alex
+Zur Umsetzung des GraphQL Service haben wird uns für das Framework **GraphQL.NET** entschieden. Diese Framework bietet zwei Möglichkeiten zur Definition eines GraphQL-Schemas, nämlich den Schema First Approach und den GraphType First Approach. Wir haben uns für den GraphType First Approach entschieden.
+
+Mit diesem Framework kann ein Schema bestehend aus den Root Operations Typen Query und Mutation gut umgesetzt werden. Weiters erlaubt es dieses Framework einen REST Post-Endpunkt für Abfragen zu definieren. Diese werden anschließend an den `DocumentExecutor` des Frameworks übergeben, welcher anschließend die Abfrage auf dem zugrunde liegenden Schema auswertet. Es ist jedoch mit diesem Framework alleine nicht möglich den Root operations Typ Subscription umzusetzen. Dazu wird in der Dokumentation von [GraphQL .NET](https://graphql-dotnet.github.io/docs/getting-started/subscriptions) auf das Projekt [GraphQL Server](https://github.com/graphql-dotnet/server/) verwiesen, da ein Server benötigt wird, welcher das Subscription Protokoll implementiert.
+
+Das GraphQL Server Projekt setzt auf das Framework GraphQL.NET auf und stellt einen .NET Core Server zur Verfügung welcher das Apollo GraphQL Subscription Protokoll implementiert. Für das Setup werden die nachfolgend angeführten Nuget Pakete benötigt. Da die derzeitige Version 3.4.0 mit einigen Fehlern behaftet ist (gemäß der Dokumentation) wird empfohlen auf die Alpha Version 3.5.0 auszuweichen. Diese Version beinhaltet jedoch Änderungen des Frameworks GraphQL.NET welche nicht mehr mit der aktuellen Version 2.4.0 kompatibel sind. 
+
+Um den GraphQL Server verwenden zu können werden folgende Nuget Pakete benötigt:
+```
+Install-Package GraphQL.Server.Transports.AspNetCore -Version 3.5.0-alpha0046
+```
+```
+Install-Package GraphQL.Server.Transports.AspNetCore.SystemTextJson -Version 3.5.0-alpha0046
+```
+```
+Install-Package GraphQL.Server.Transports.WebSockets -Version 3.5.0-alpha0046
+```
+
+Integriert werden kann der GraphQL Server in ASP.NET Core mittels der GraphQL Middleware. Diese kann wie folgt in der Klasse `Startup` konfiguriert werden.
+
+```C#
+public void ConfigureServices(IServiceCollection services)
+{
+	// ...
+	services.AddSingleton<IValidationRule, RequiresAuthValidationRule>();
+	// Add GraphQL services and configure options
+	services
+			.AddSingleton<GraphQlSchema>()
+			.AddGraphQL(options =>
+			{
+				options.EnableMetrics = false;
+				//options.EnableMetrics = Environment.IsDevelopment();
+				options.ExposeExceptions = Environment.IsDevelopment();
+			})
+			.AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
+			.AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
+			.AddWebSockets() // Add required services for web socket support
+			.AddDataLoader() // Add required services for DataLoader support
+			.AddGraphTypes(typeof(GraphQlSchema)); // Add all IGraphType implementors in assembly which GraphQlSchema exists
+}
+
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+{
+	//...
+	app.UseWebSockets();
+	app.UseGraphQLWebSockets<GraphQlSchema>(GRAPHIQL_API_ENDPOINT);
+
+	app.UseGraphQL<GraphQlSchema, GraphQLHttpMiddlewareWithLogs<GraphQlSchema>>(GRAPHIQL_API_ENDPOINT);
+
+	app.UseGraphiQLServer(new GraphiQLOptions
+	{
+		GraphiQLPath = GRAPHIQL_ENDPOINT,
+		GraphQLEndPoint = GRAPHIQL_API_ENDPOINT,
+	});
+
+	app.UseGraphQLPlayground(new GraphQLPlaygroundOptions
+	{
+		Path = "/ui/playground",
+		GraphQLEndPoint = GRAPHIQL_API_ENDPOINT
+	});
+}
+```
 
 ### Data-Loader
 
@@ -161,13 +220,288 @@ Es wurde, den [offiziellen Code-Generator von Apollo](https://github.com/apollog
 
 # Schema
 
-Alex
+Für den GraphQL Service wurde folgendes Schema definiert:
+```graphql
+type Answer implements PostInterface {
+  comments: [Comment!]!
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  question: Question!
+  upVotes: Long!
+  upVoteUsers: [User!]!
+  user: User!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+type Comment implements PostInterface {
+  answer: Answer!
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  upVotes: Long!
+  upVoteUsers: [User!]!
+  user: User!
+}
+
+type Mutation {
+  # adds a graphoverflow tag
+  addTag(tagName: String!): Tag
+  # adds an answer
+  answerQuestion(questionId: Int!, content: String!): Answer
+  # adds a question
+  askQuestion(question: QuestionInput!): Question
+  # adds a comment
+  commentAnswer(answerId: Int!, content: String!): Comment
+  # user login
+  login(loginData: UserLoginInput!): AuthPayload
+  # upVote answer
+  upVoteAnswer(answerId: Int!): Answer
+  # upVote question
+  upVoteQuestion(questionId: Int!): Question
+}
+
+interface PostInterface {
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  upVotes: Long!
+  upVoteUsers: [User!]!
+}
+
+type Query {
+  allTags: [Tag!]!
+  # load all questions
+  latestQuestions(
+    # ID of the user to fetch questions for
+    userId: Int = -1
+  ): [Question!]!
+  me: User
+  # load a question
+  question(
+    # Question ID
+    id: Int
+  ): Question!
+  # load questions filtered by tag
+  questionsByTag(tagName: String): [Question!]!
+  # get all tags that match the %tagName%
+  tags(tagName: String): [Tag!]!
+}
+
+type Question implements PostInterface {
+  answers: [Answer!]!
+  content: String!
+  createdAt: DateTime!
+  id: ID!
+  tags: [Tag!]!
+  title: String!
+  upVotes: Long!
+  upVoteUsers: [User!]!
+  user: User!
+}
+
+input QuestionInput {
+  title: String!
+  content: String!
+  tags: [String!]!
+}
+
+type Subscription {
+  answerAdded(
+    # ID of the question to listen to new answers for
+    questionId: Int!
+  ): Answer
+  commentAddedToAnswerOfQuestion(
+    # ID of the question to listen to new comments to answers for
+    questionId: Int!
+  ): Comment
+}
+
+type Tag {
+  id: ID!
+  name: String!
+  questions: [Question!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+}
+
+input UserLoginInput {
+  userName: String!
+  password: String!
+}
+```
+
+## Schema mit GraphQL .NET
+Das Schema bildet die Definition des Typsystems des GraphQL Service. Es bestimmt die zur Verfügung stehenden Root Operations Typen (In unserem Beispiel: Query, Mutation, Subscription). Das Schema muss von der Klasse `Schema` abgeleitet werden. Interessant war hierbei auch, dass an die Basisklasse ein Objekt vom Typ `IServiceProvider` übergeben werden kann, welches anschließend für Dependency Injection in den Graphtypen verwendet wird. 
+```C#
+using GraphQL.Types;
+// ...
+public class GraphQlSchema : Schema
+  {
+    public GraphQlSchema(ITagService tagService, 
+      IQuestionService questionService, 
+      IAuthenticationService authenticationService,
+      IAnswerService answerService,
+      IServiceProvider provider,
+      IUserService userService,
+      ICommentService commentService) 
+      : base(provider)
+    {
+      Query = new QueryType(tagService, questionService, answerService, userService);
+      Mutation = new MutationType(tagService, questionService, answerService, authenticationService, commentService);
+      Subscription = new SubscriptionType(answerService, commentService);
+    }
+  }
+```
 
 # Queries
 
 ## Server
 
-Alex
+Queries sind lesende Abfragen, welche an den GraphQL Service gesendet werden können. Im Typsystem muss ein Query Graphtyp definiert werden, welcher die Einstiegspunkte in den zugrunde liegenden Graphen (das Typsystem) definiert. Hierfür muss eine Klasse definiert werden, welche wie alle Output Graphtypen von der Basisklasse `ObjectGraphType` abgeleitet werden. In dieser Klasse können dann Felder mitsamt ihren Resolver Methoden definiert werden, welche als Einstiegspunkte zum traversieren des Graphen dienen.
+
+Ein Feld entspricht im wesentlichen einer Funktion, welche Argumente entgegennehmen und einen Wert retournieren kann. Ein Feld `Field<UserGraphType>(...)` besteht dabei immer mindestens aus einem Output Graphtypen (von `ObjectGraphType` abgleiteten Klassen) und einem Namen. Der Output Graphtyp beschreibt dabei den Typ des Rückgabewerts. Weiters können Parameter und Resolver Methoden definiert werden. Im `QueryTyp` werden für alle Felder Resolver Methoden definiert, da es keine Quelle gibt, aus welcher die Feldwerte implizit ermittelt werden können. An dieser Stelle ist jedoch darauf hinzuweisen, dass keine Output Graphtypen als Parameter Typen verwendet werden können. Hierfür müssen eigene Input Graphtypen mitsamt ihren Feldern deifniert werden, welche von der Klasse `InputObjectGraphType<...>` abgleitet werden müssen. Skalare Parametertypen können jedoch ohne weiteres als Output- sowie auch als Input GraphTypen verwendet werden.
+
+Zum ermitteln der einzelnen Feldwerte werden Services an den Graphtypen mittels Dependency Injection übergeben, welche anschließend in den Resolver Methoden verwendet werden.
+
+```C#
+public class QueryType : ObjectGraphType
+{
+	#region Members
+	private readonly ITagService tagService;
+	private readonly IQuestionService questionService;
+	private readonly IAnswerService answerService;
+	private readonly IUserService userService;
+	#endregion Members
+
+	#region Construction
+	public QueryType(ITagService tagService, IQuestionService questionService, IAnswerService answerService, IUserService userService)
+	{
+		this.tagService = tagService;
+		this.questionService = questionService;
+		this.answerService = answerService;
+		this.userService = userService;
+		InitializeTypeName();
+		InitializeFields();
+	}
+
+	private void InitializeTypeName()
+	{
+		Name = "Query";
+	}
+
+	private void InitializeFields()
+	{
+		var meField = Field<UserGraphType>(name: "me", resolve: ResolveUser);
+		meField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+
+		Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
+			name: "allTags", resolve: ResolveAllTags
+		);
+
+		Field<NonNullGraphType<ListGraphType<NonNullGraphType<TagType>>>>(
+			name: "tags",
+			resolve: ResolveTags,
+			arguments: new QueryArguments(new QueryArgument<StringGraphType>() 
+				{ 
+					Name = "tagName",
+					DefaultValue = string.Empty 
+				}
+			)
+		).Description = "get all tags that match the %tagName%";
+
+		Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
+			name: "latestQuestions",
+			resolve: ResolveLatestQuestions,
+			arguments: new QueryArguments(new QueryArgument<IntGraphType>
+			{
+				Name = "userId",
+				DefaultValue = (-1),
+				Description = "ID of the user to fetch questions for"
+			})
+		).Description = "load all questions";
+
+		Field<NonNullGraphType<ListGraphType<NonNullGraphType<QuestionType>>>>(
+			name: "questionsByTag",
+			arguments: new QueryArguments(new QueryArgument<StringGraphType>()
+			{
+				Name = "tagName",
+				DefaultValue = string.Empty
+			}
+			),
+			resolve: ResolveQuestionsByTag
+		).Description = "load questions filtered by tag";
+
+		Field<NonNullGraphType<QuestionType>>(
+			name: "question",
+			arguments: new QueryArguments(
+				new QueryArgument<IntGraphType>
+				{
+					Name = "id",
+					Description = "Question ID"
+				}
+			),
+			resolve: ResolveQuestion
+		).Description = "load a question";
+	}
+	#endregion Construction
+
+	#region Resolvers
+
+	public async Task<object> ResolveUser(IResolveFieldContext<object> context)
+	{
+		GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+		var userId = userContext.User.Id;
+		return await userService.FindUserById(userId);
+	}
+
+	public object ResolveAllTags(IResolveFieldContext<object> context)
+	{
+		return tagService.FindAllTags();
+	}
+
+	private object ResolveTags(IResolveFieldContext<object> context)
+	{
+		var tagName = context.Arguments["tagName"] as string;
+		return tagService.FindAllTagsByName(tagName);
+	}
+
+	private async Task<object> ResolveLatestQuestions(IResolveFieldContext<object> context)
+	{
+		int userId = (int) context.Arguments["userId"];
+		if (userId != (-1))
+		{
+			return await questionService.FindLatestQuestionsByUserId(userId);
+		}
+		else
+		{
+			return await questionService.FindLatestQuestions();
+		}
+	}
+
+	private async Task<object> ResolveQuestion(IResolveFieldContext<object> context)
+	{
+		int questionId = (int)context.Arguments["id"];
+		var question = await questionService.FindQuestionById(questionId);
+		return question;
+	}
+
+	private async Task<object> ResolveQuestionsByTag(IResolveFieldContext<object> context)
+	{
+		var tagName = context.Arguments["tagName"] as string;
+		return await questionService.FindQuestionsByTagName(tagName);
+
+	}
+	#endregion Resolvers
+}
+```
 
 ## Data-Loader
 
@@ -343,7 +677,175 @@ Dieses Prinzip kann nun auf alle Abfragen angewandt werden.
 
 ## Server
 
-Alex
+Mutationen sind schreibende Anfragen welche an den GraphQL Service gesendet werden können. Hierbei handelt es sich um einen Root Operations Typ, welcher im Schema Objekt hinterlegt werden muss. 
+
+Hierfür muss eine Klasse definiert werden, welche von der Basisklasse `ObjectGraphType` abgeleitet ist. In dieser Klasse können dann Felder mitsamt ihren Resolver Methoden definiert werden. Der wesentliche Unterschied zum Query Graphtyp besteht darin, dass in den Resolver Methoden des `MutationType` schreibende Operationen durchgeführt werden und daraus resultierende Werte retourniert werden.
+
+```C#
+public class MutationType : ObjectGraphType
+{
+	#region Members
+	private readonly ITagService tagService;
+	private readonly IQuestionService questionService;
+	private readonly IAnswerService answerService;
+	private readonly IAuthenticationService authenticationService;
+	private readonly ICommentService commentService;
+	#endregion Members
+
+	#region Construction
+	public MutationType(
+		ITagService tagService,
+		IQuestionService questionService,
+		IAnswerService answerService,
+		IAuthenticationService authenticationService,
+		ICommentService commentService
+	)
+	{
+		this.tagService = tagService;
+		this.questionService = questionService;
+		this.answerService = answerService;
+		this.authenticationService = authenticationService;
+		this.commentService = commentService;
+		InitializeTypeName();
+		InitializeFields();
+	}
+
+	private void InitializeTypeName()
+	{
+		Name = "Mutation";
+	}
+
+	private void InitializeFields()
+	{
+		var addTagField = Field<TagType>(
+			name: "addTag",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<StringGraphType>>{ Name = "tagName" }),
+			resolve: ResolveAddTag
+		);
+		addTagField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+		addTagField.Description = "adds a graphoverflow tag";
+
+		var upVoteQuestionField = Field<QuestionType>(
+			name: "upVoteQuestion",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" }),
+			resolve: ResolveUpvoteQuestion
+		);
+		upVoteQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+		upVoteQuestionField.Description = "upVote question";
+
+		var upVoteAnswerField = Field<AnswerType>(
+			name: "upVoteAnswer",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" }),
+			resolve: ResolveUpvoteAnswer
+		);
+		upVoteAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+		upVoteAnswerField.Description = "upVote answer";
+
+		var askQuestionField = Field<QuestionType>(
+			name: "askQuestion",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<QuestionInputGraphType>> { Name = "question" }
+			),
+			resolve: ResolveAskQuestion
+		);
+		askQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+		askQuestionField.Description = "adds a question";
+
+		var answerQuestionField = Field<AnswerType>(
+			name: "answerQuestion",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "questionId" },
+				new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "content" }
+			),
+			resolve: ResolveAddAnswer
+		);
+		answerQuestionField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+		answerQuestionField.Description = "adds an answer";
+
+		var commentAnswerField = Field<CommentType>(
+			name: "commentAnswer",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<IntGraphType>> { Name = "answerId" },
+				new QueryArgument<NonNullGraphType<StringGraphType>> { Name = "content" }
+			),
+			resolve: ResolveAddComment
+		);
+		commentAnswerField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+		commentAnswerField.Description = "adds a comment";
+
+		Field<AuthPayloadGraphType>(
+			name: "login",
+			arguments: new QueryArguments(
+				new QueryArgument<NonNullGraphType<UserLoginInputGraphType>> { Name = "loginData" }
+			),
+			resolve: ResolveUserLogin
+		).Description = "user login";
+	}
+	#endregion Construction
+
+	#region Resolvers
+	public object ResolveAddTag(IResolveFieldContext<object> context)
+	{
+		var tagName = (string)context.Arguments["tagName"];
+		var createdTag = tagService.AddTag(tagName);
+		return createdTag;
+	}
+
+	private async Task<object> ResolveUpvoteQuestion(IResolveFieldContext<object> context)
+	{
+		GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+		int questionId = context.GetArgument<int>("questionId");
+		QuestionDto updatedQuestion = await questionService.UpvoteQuestion(questionId, userContext.User.Id);
+		return updatedQuestion;
+	}
+
+	private async Task<object> ResolveUpvoteAnswer(IResolveFieldContext<object> context)
+	{
+		GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+		int answerId = context.GetArgument<int>("answerId");
+		AnswerDto updatedQuestion = await answerService.UpvoteAnswer(answerId, userContext.User.Id);
+		return updatedQuestion;
+	}
+
+	public async Task<object> ResolveAskQuestion(IResolveFieldContext<object> context)
+	{
+		GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+		QuestionInputDto question = context.GetArgument<QuestionInputDto>("question");
+		QuestionDto createdQuestion = await questionService.CreateQuestion(question, userContext.User.Id);
+		return createdQuestion;
+	}
+
+	private object ResolveUserLogin(IResolveFieldContext<object> context)
+	{
+		var userLoginData = context.GetArgument<UserLoginInputDto>("loginData");
+		var result = authenticationService.Authenticate(userLoginData);
+		return result;
+	}
+
+	private async Task<object> ResolveAddAnswer(IResolveFieldContext<object> context)
+	{
+		GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+		var questionId = context.GetArgument<int>("questionId");
+		var content = context.GetArgument<string>("content");
+		AnswerDto answer = await answerService.CreateAnswer(content, questionId, userContext.User.Id);
+		return answer;
+
+	}
+
+	private async Task<object> ResolveAddComment(IResolveFieldContext<object> context)
+	{
+		GraphQlUserContext userContext = context.UserContext as GraphQlUserContext;
+		var answerId = context.GetArgument<int>("answerId");
+		var content = context.GetArgument<string>("content");
+		CommentDto comment = await commentService.CreateComment(content, answerId, userContext.User.Id);
+		return comment;
+	}
+	#endregion Resolvers
+}
+```
 
 ## Client
 
@@ -892,7 +1394,166 @@ class QuestionPage extends React.Component<QuestionPageProperties, QuestionPageS
 
 ## Server
 
-Alex
+Der Gegenstand der Authentifizierung und Autorisierung von Benutzern, welche einen GraphQL Graphen traversieren ist ein sehr spannendes Thema, da das GraphQL Typsystem in alle Richtungen traversiert werden kann. Zur Umsetzung dieses Gegenstandes gibt es mehrere Ansätze:
+* Es wird die Authentifizierung und Autorisierung des GraphQL Service auf Ebene der Route zum Service durchgeführt. Der Vorteil diese Vorgehens besteht darin, dass Authentifizierung und Autorisierung aus der Definition des GraphQL Typsystems herausgezogen werden. Der Nachteil dieses Vorgehens ist jedoch, dass die Granularität sehr grob ist. Ein Benutzer darf den Service benutzen, oder er darf es nicht.
+
+* Soll jedoch auf Feldebene entschieden werden, ob eine bestimmte Benutzergruppe (z.B.: User, Admin) berechtigt ist das jeweilige Feld zu benutzen oder nicht, ist das zuvor beschriebene Vorgehen nicht ausreichend. Demnach muss auf Feldebene definiert werden, ob ein Benutzer angemeldet sein muss (Authentifizierung) und welches Recht er besitzen muss (Autorisierung), um das jeweilige Feld zu verwenden.
+
+Wir haben uns für die spannendere Variante, die Definition auf Feldebene, entschieden. Dazu verwenden wir den GraphQL `UserContext` welcher zu Beginn einer Anfrage erstellt wird und dann für die gesamte Abarbeitungszeit der Abfrage als Daten Container zur Verfügung steht.
+
+Dieser UserContext wird zu Beginn eines HTTP Requests mittels eines Builders erstellt. Beim Erstellen kann auf den `HttpContext` des Requests zugegriffen werden. Diesen verwenden wir um den übermittelten, wenn enthalten, JWT Token auszulesen und durch den `AuthenticationService` zu validieren. Ist der Token valide wird der User mitsamt seinen Rechten/Claims im GraphQL UserContext hinterlegt. Daurch die Abfrage des Properties `User` kann später ermittelt werden, ob ein Benutzer angemeldet ist oder nicht. 
+```C#
+// ...
+.AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
+// ...
+```
+
+```C#
+public class GraphQlUserContext : Dictionary<string, object>
+{
+	private const string AUTORICATION_HEADER = "Authorization";
+
+	public const string AUTHORIZATION_TOKEN_KEY = "auth_token";
+	public const string USER_ID_KEY = "UserID";
+
+	public static Func<HttpContext, GraphQlUserContext> UserContextCreator = Create;
+
+	private static GraphQlUserContext Create(HttpContext httpcontext)
+	{
+		var userContext = new GraphQlUserContext();
+		if (httpcontext.Request.Headers.ContainsKey(AUTORICATION_HEADER))
+		{
+			var token = httpcontext.Request.Headers[AUTORICATION_HEADER];
+			userContext.Add(AUTHORIZATION_TOKEN_KEY, token);
+
+			AuthenticationService authenticationService = CreateAuthenticationService();
+			var user = authenticationService.GetAuthenticatedUser(token).Result;
+			if (user != null)
+			{
+				userContext.Add(USER_ID_KEY, user.Id);
+				userContext.User = user;
+			}
+		}
+		return userContext;
+	}
+
+	private static AuthenticationService CreateAuthenticationService()
+	{
+		return new AuthenticationService(new UserDao("Host=localhost;Username=postgres;Password=postgres;Database=graphoverflow"));
+	}
+
+	public UserDto User { get; set; }
+
+	public bool IsUserAuthenticated()
+	{
+		return ContainsKey(USER_ID_KEY);
+	}
+
+	public int GetIdOfAuthenticatedUser()
+	{
+		return (int)this[USER_ID_KEY];
+	}
+}
+```
+
+Weiters werden Extension Methoden definiert, welche auf den Metadaten der Felder eines GraphTypen operieren. Diese werden dazu verwendet, die benötigten Claims für das jeweilige Feld zu definieren und in den dazugehörigen Metadaten zu hinterlegen.
+```C#
+public static class GraphQLExtensions
+{
+	public static readonly string PERMISSIONS_KEY = "Permissions";
+
+	public static bool RequiresPermissions(this IProvideMetadata type)
+	{
+		var permissions = type?.GetMetadata<IEnumerable<string>>(PERMISSIONS_KEY, new List<string>());
+		return (permissions != null && permissions.Any());
+	}
+
+	public static bool CanAccess(this IProvideMetadata type, IEnumerable<string> claims)
+	{
+		var permissions = type.GetMetadata<IEnumerable<string>>(PERMISSIONS_KEY, new List<string>());
+		return permissions.All(x => claims?.Contains(x) ?? false);
+	}
+
+	public static bool HasPermission(this IProvideMetadata type, string permission)
+	{
+		var permissions = type.GetMetadata<IEnumerable<string>>(PERMISSIONS_KEY, new List<string>());
+		return permissions.Any(x => string.Equals(x, permission));
+	}
+
+	public static void RequirePermission(this IProvideMetadata type, string permission)
+	{
+		var permissions = type.GetMetadata<List<string>>(PERMISSIONS_KEY);
+
+		if (permissions == null)
+		{
+			permissions = new List<string>();
+			type.Metadata[PERMISSIONS_KEY] = permissions;
+		}
+
+		permissions.Add(permission);
+	}
+
+	public static FieldBuilder<TSourceType, TReturnType> RequirePermission<TSourceType, TReturnType>(
+			this FieldBuilder<TSourceType, TReturnType> builder, string permission)
+	{
+		builder.FieldType.RequirePermission(permission);
+		return builder;
+	}
+}
+```
+
+Auf Feldebene kann somit mittels der Extension Methode `RequirePermission(UserPermissionConstants.USER_PERMISSION)` definiert werden, dass ein Benutzer angemeldet sein muss, und das Recht `"BENUTZER"` besitzen muss.
+```C#
+var addTagField = Field<TagType>(
+        name: "addTag",
+        arguments: new QueryArguments(
+          new QueryArgument<NonNullGraphType<StringGraphType>>{ Name = "tagName" }),
+        resolve: ResolveAddTag
+      );
+      addTagField.RequirePermission(UserPermissionConstants.USER_PERMISSION);
+      addTagField.Description = "adds a graphoverflow tag";
+```
+
+Die Überprüfung wird mittels einer `IValidationRule` bei der Verarbeitung der Feldzugriffe der Abfrage durchgeführt. In dieser Regel wird überprüft ob im GraphQL UserContext ein User hinterlegt ist (also ein Benutzer angemeldet ist) und dieser das in den Metadaten des Feldes festgelegte Recht besitzt. Ist dies nicht der Fall, wird ein GraphQL Error retourniert, welcher besagt, dass der Benutzer auf das Feld nicht zugreifen kann, weil er nicht angemeldet ist. 
+```C#
+public class RequiresAuthValidationRule : IValidationRule
+  {
+    public INodeVisitor Validate(ValidationContext context)
+    {
+      var userContext = context.UserContext as GraphQlUserContext;
+      bool authenticated = false;
+      if (userContext != null)
+      {
+        authenticated = userContext.IsUserAuthenticated();
+      }
+
+      return new EnterLeaveListener(_ =>
+      {
+        // this could leak info about hidden fields in error messages
+        // it would be better to implement a filter on the schema so it
+        // acts as if they just don't exist vs. an auth denied error
+        // - filtering the schema is not currently supported
+        _.Match<Field>(fieldAst =>
+        {
+          var fieldDef = context.TypeInfo.GetFieldDef();
+          if (fieldDef.RequiresPermissions() && (!authenticated || !fieldDef.CanAccess(userContext.User.Claims)))
+          {
+            context.ReportError(new ValidationError(
+                context.OriginalQuery,
+                "auth-required",
+                $"You are not authorized to run this query.",
+                fieldAst));
+          }
+        });
+      });
+    }
+
+    public Task<INodeVisitor> ValidateAsync(ValidationContext context)
+    {
+      return Task.Run(() => Validate(context));
+    }
+  }
+```
 
 ## Client
 
