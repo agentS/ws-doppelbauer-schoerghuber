@@ -3,6 +3,7 @@ using GraphOverflow.Services;
 using GraphOverflow.WebService.GraphQl.GqlSchema.InterfaceGraphTypes;
 using GraphQL.Types;
 using System;
+using GraphQL.DataLoader;
 
 namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
 {
@@ -13,6 +14,7 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     private readonly IAnswerService answerService;
     private readonly IUpVoteUsersService upVoteUsersService;
     private readonly IUserService userService;
+    private readonly IDataLoaderContextAccessor dataLoaderContextAccessor;
     #endregion Members
 
     #region Construction
@@ -20,13 +22,15 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
       ITagService tagService,
       IAnswerService answerService,
       IUpVoteUsersService upVoteUsersService,
-      IUserService userService
+      IUserService userService,
+      IDataLoaderContextAccessor dataLoaderContextAccessor
     )
     {
       this.tagService = tagService;
       this.answerService = answerService;
       this.upVoteUsersService = upVoteUsersService;
       this.userService = userService;
+      this.dataLoaderContextAccessor = dataLoaderContextAccessor;
 
       InitializeName();
       InitializeFields();
@@ -74,8 +78,12 @@ namespace GraphOverflow.WebService.GraphQl.GqlSchema.OutputGraphTypes
     private object ResolveAnswers(IResolveFieldContext<QuestionDto> context)
     {
       var question = context.Source;
-      return answerService.FindAnswersForQuestion(question);
-
+      var answersLoader = this.dataLoaderContextAccessor.Context
+        .GetOrAddCollectionBatchLoader<QuestionDto, AnswerDto>(
+          "FindAnswersForQuestions",
+          answerService.FindAnswersForQuestions
+        );
+      return answersLoader.LoadAsync(question);
     }
 
     private object ResolveUser(IResolveFieldContext<QuestionDto> context)

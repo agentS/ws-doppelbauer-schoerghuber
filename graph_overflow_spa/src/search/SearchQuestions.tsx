@@ -37,13 +37,6 @@ class SearchQuestions extends React.Component<QuestionsListProperties, SearchQue
                 />
             </Form.Group>
         </Form>
-        {
-          () => {
-            if(this.state.tagName !== ""){
-              console.log("tagName is empty");
-            }
-          }
-        }
         <SearchByTagNameComponent variables={{tagName: this.state.tagName}}>
           {({ error, data }) => {
 					if (error || !data) {

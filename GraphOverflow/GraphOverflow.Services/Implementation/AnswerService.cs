@@ -32,6 +32,16 @@ namespace GraphOverflow.Services.Implementation
       return MapAnswers(await answerDao.FindAnswersByQuestionId(question.Id));
     }
 
+    public async Task<ILookup<QuestionDto, AnswerDto>> FindAnswersForQuestions(IEnumerable<QuestionDto> questions)
+    {
+      IEnumerable<Answer> answers = await this.answerDao.FindAnswersByIds(
+        questions.Select(question => question.Id)
+      );
+      return answers
+        .Select(answer => MapAnswer(answer))
+        .ToLookup(answer => questions.First(question => question.Id == answer.QuestionId));
+    }
+
     public async Task<AnswerDto> FindAnswerForComment(CommentDto comment)
     {
       return MapAnswer(await answerDao.FindAnswerById(comment.AnswerId));

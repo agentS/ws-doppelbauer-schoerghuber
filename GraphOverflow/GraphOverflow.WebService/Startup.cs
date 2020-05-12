@@ -82,7 +82,7 @@ namespace GraphOverflow.WebService
           .AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
           .AddSystemTextJson(deserializerSettings => { }, serializerSettings => { })
           .AddWebSockets() // Add required services for web socket support
-          //.AddDataLoader() // Add required services for DataLoader support
+          .AddDataLoader() // Add required services for DataLoader support
           .AddGraphTypes(typeof(GraphQlSchema)); // Add all IGraphType implementors in assembly which GraphQlSchema exists
 
       // define services

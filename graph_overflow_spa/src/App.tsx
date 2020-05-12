@@ -11,6 +11,7 @@ import SearchQuestions from "./search/SearchQuestions";
 import AskQuestion from "./ask/AskQuestion";
 import QuestionsList from "./frontpage/QuestionsList";
 import QuestionPage from "./question/QuestionPage";
+import MyQuestionList from "./myquestions/MyQuestionList";
 import Login from "./authentication/Login";
 
 interface AppProperties extends RouteComponentProps {}
@@ -31,6 +32,7 @@ class App extends React.Component<AppProperties, AppState> {
     const questionPage = ({match}: any) => (
       <QuestionPage questionId={match.params.questionId} />
     );
+    const myQuestionList = () => (<MyQuestionList />);
 
     return (
       <div className="container">
@@ -44,6 +46,11 @@ class App extends React.Component<AppProperties, AppState> {
           }
           {
             isLoggedIn()
+            ? (<Nav.Link href="/myquestions">My questions</Nav.Link>)
+            : (<span></span>)
+          }
+          {
+            isLoggedIn()
             ? (<Nav.Link onClick={() => this.logout()}>Logout</Nav.Link>)
             : (<Nav.Link href="/login">Login</Nav.Link>)
           }
@@ -52,9 +59,10 @@ class App extends React.Component<AppProperties, AppState> {
         <Route exact path="/" component={questionsList} />
         <Route exact path="/questions" component={questionsList} />
         <Route exact path="/question/:questionId" component={questionPage} />
-        <Route exact path="/ask" component={askQuestion}/>
-        <Route exact path="/login" component={login}/>
+        <Route exact path="/ask" component={askQuestion} />
+        <Route exact path="/myquestions" component={myQuestionList} />
         <Route exact path="/search" component={search}/>
+        <Route exact path="/login" component={login} />
       </div>
     );
   }
