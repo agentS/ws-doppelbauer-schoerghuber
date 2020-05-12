@@ -4,12 +4,10 @@ Alex
 
 # Architektur
 
-Alex
-
 Unsere Anwendung ist als Client-Server-System realisiert.
 Der Server ist dabei mit dem ASP.NET Core und [GraphQL Server](https://github.com/graphql-dotnet/server/) realisiert, während der Client als SPA mit [React](https://www.reactjs.org/), TypeScript und dem [Apollo-Client für React](https://www.apollographql.com/docs/react/) entwickelt ist.
 
-
+Alex
 
 # Setup
 
@@ -147,6 +145,10 @@ Alex
 
 Lukas
 
+## Data-Loader
+
+Lukas
+
 # Mutations
 
 ## Server
@@ -169,10 +171,154 @@ Lukas
 
 Lukas
 
-# Data-Loader
+# Login
+
+## Server
+
+Alex
+
+## Client
 
 Lukas
 
 # Ergebnisse
 
-Lukas
+In diesem Abschnitt wird die Funktionalität des Clients vorgestellt.
+
+## Startseite
+
+Die unten zu sehende Abbildung zeit die Startseite der Web-SPA. Auf dieser werden die aktuellsten Fragen angezeigt.
+
+![Startseite der Anwendung](doc/img/frontPageUnauthenticated.png)
+
+## Seite für eine Frage als anonymer Benutzer
+
+Klickt der Benutzer auf eine Frage wird er zur Detailseite weitergeleitet, auf welcher die Frage mit Tags, Upvotes, allen Antworten und allen Kommentaren zu den Antworten angezeigt wird.
+Die Seite für eine Frage ist auf der folgenden Abbildung zu sehen.
+
+![Seite zur Anzeige einer Frage mit Tags, Upvotes, Antworten und Kommentaren zu Antworten](doc/img/questionPageUnauthenticated.png)
+
+Hier erfolgt nun ein kleiner Vorgriff, der zeigt, dass die Subscriptions auch ohne Authentifzierung funktionieren.
+Schreibt nun ein authentifizierter Benutzer einen Kommentar, wird dieser mittels der Subscription ohne Reload der Seite angezeigt.
+Die folgende Abbildung zeigt die Sicht des Benutzers, welcher den Kommentar verfasst.
+
+![Verfassen eines Kommentars](doc/img/commentPosted.png)
+
+Ohne Reload wird der Kommentar nun in der Ansicht des anonymen Benutzers angezeigt, wie die folgende Abbildung zeigt.
+
+![Anzeige eines neuen Kommentars in der Ansicht eines anonymen Benutzers](doc/img/questionPageUnauthenticatedNewComment.png)
+
+Die gleiche Funktionalität steht für die Anzeige von neuen Antworten zur Verfügung: Sobald ein Benutzer eine neuen Antwort verfasst, wird diese via Subscriptions an alle Clients, welche gerade die Frageseite anzeigen, gepusht und dort angezeigt.
+Die unten zu sehende Abbildung zeigt die Sicht des Benutzers, welcher die Antwort verfasst.
+
+![Verfassen einer Antwort](doc/img/answerPosted.png)
+
+Auf der Seite des anonymen Benutzers wird die Antwort nun ohne Reload angezeigt, wie im folgenden Screenshot zu sehen ist.
+
+![Anzeige einer neuen Antwort in der Ansicht eines anonymen Benutzers](doc/img/questionPageUnauthenticatedNewAnswer.png)
+
+## Suche nach Tags
+
+In der Suche kann jeder Benutzer nach Fragen zu bestimmten Tags suchen.
+Bei Eingabe eines Suchbegriffes werden alle Fragen, die mit dem entsprechenden Tag versehen sind, angezeigt, wobei die Anzeige während des Tippens aktualisiert wird.
+
+Der folgende Screenshot zeigt das Ergebnis der Suche nach dem Begriff "vert".
+Wie erwartet, wird die zuvor gestellte Frage zum Thema [Vert.x](https://www.vertx.io/) angezeigt.
+
+![Suche nach dem Tag "vert"](doc/img/searchForTag.png)
+
+Das [verlinkte Video](doc/img/searchForTags.mp4) zeigt die Ergebnisse der Suchen nach den Begriffen "vertx" und "c#".
+
+![Suche nach Begriffen](doc/img/searchForTags.mp4)
+
+## Login
+
+Nach einem Login steht dem Benutzer zusätzliche Funktionalität in Form des Erstellen von Fragen, Antworten und Kommentaren, dem Vergeben von Upvotes und der Anzeige der von ihm gestellten Fragen zur Verfügung.
+
+Auf der Seite für den Login wird der Benutzer nun nach seinem Benutzernamen und Passwort gefragt, wie die folgende Abbildung zeigt.
+
+![Login-Seite](doc/img/login.png)
+
+Nach einem Login stehen auf der Startseite zusätzliche Links zum Stellen von Fragen sowie zur Anzeige der eigenen Fragen zur Verfügung.
+Nach der erfolgten Weiterleitung auf die Startseite sind die Links nun in der Navigationsleiste sichtbar, wie die folgende Abbildung zeigt.
+
+![Startseite nach erfolgtem Login](doc/img/frontPageAuthenticated.png)
+
+## Stellen von Fragen
+
+Auf der Seite zur Erstellung einer Frage wird dem Benutzer ein Formular angezeigt, in welchem er Titel, eigentliche Frage und Tags vergeben kann.
+Mehrere Tags sind dabei mit Doppelpunkten voneinander zu trennen.
+Die unten ersichtliche Abbildung zeigt ein ausgefülltes Formular zur Erstellung einer Frage.
+
+![Stellen einer Frage](doc/img/askQuestion.png)
+
+Nach dem Stellen der Frage wird der Benutzer auf die Seite für die Frage weitergeleitet, welche in der unteren Abbildung zu sehen ist.
+
+![Seite für eine neue Frage](doc/img/questionPageBeforeUpvote.png)
+
+## Seite für eine Frage als authentifizierter Benutzer
+
+### Upvotes für Fragen
+
+Da der Benutzer nun eingeloggt ist, kann er durch Drücken des grünen Upvote-Buttons, welcher links neben der Frage in der oberen Abbildung zu sehen ist, einen Upvote für die Frage vergeben.
+Dies führt dazu, dass der aktuelle Upvote-Count und die Liste der Benutzer, die einen Upvote vergeben haben, als Ergebnis der GraphQL-Manipulation an den Client gesendet wird und dieser die Anzeige enstprechend aktualisiert, sodass die Seite nun wie unten abgebildet dargestellt wird.
+
+![Seite für eine Frage nach einem Upvote](doc/img/questionPageAfterUpvote.png)
+
+### Antworten
+
+Nun können Benutzer Antworten für Fragen geben.
+Die unten zu sehende Abbildung zeigt die Ansicht eines anderen authentifizierten Benutzers für das Beantworten einer Frage, bevor diese abgesendet wird.
+
+![Seite für eine Frage vor dem Posten einer Antwort aus Sicht des Benutzers, der die Antwort erstellt](doc/img/newAnswerBeforePostingBart.png)
+
+Auf beiden Seiten wird die neue Anwort nun mittels Subscriptions in die Liste der Antworten eingefügt.
+Die untere Abbildung zeigt die Seite nach dem Absenden der Antwort und nach Bestätigung des Dialogs für den Benutzer, welcher die Antwort erstellt hat.
+
+![Seite für eine Frage nach dem Posten einer Antwort aus Sicht des Benutzers, der die Antwort erstellt hat](doc/img/newAnswerAfterPostingBart.png)
+
+Auch für den anderen authentifizierten Benutzer, welcher die Frage erstellt hat, wird die neue Antwort angezeigt, wie die unten zu sehende Abbildung zeigt.
+
+![Seite für eine Frage nach dem Posten einer Antwort aus Sicht des Benutzers, der die Frage erstellt hat](doc/img/newAnswerAfterPostingHomer.png)
+
+### Kommentare
+
+Kommentare für eine Frage werden ebenfalls via Subscriptions an alle Clients, die gerade die entsprechende Frageseite anzeigen, verteilt.
+Die unten zu sehende Abbildung zeigt die Seite aus Sicht eines Benutzers, welcher gerade einen Kommentar absenden möchte.
+
+![Seite für eine Frage vor dem Posten eines Kommentars aus Sicht des Benutzers, der den Kommentar erstellt](doc/img/newCommentBeforePostingHomer.png)
+
+Da der Kommentar noch nicht gepostet ist, ist er für den anderen Benutzer logischerweise nicht sichtbar, wie der folgende Screenshot zeigt.
+
+![Seite für eine Frage vor dem Posten eines Kommentars aus Sicht des anderen Benutzers](doc/img/newCommentBeforePostingBart.png)
+
+Schickt der Benutzer den Kommentar ab und bestätigt dieser die Erfolgsmeldung, wird der Kommentar in der entsprechenden Liste angezeigt, wie der folgende Screenshot zeigt.
+
+![Seite für eine Frage nach dem Posten eines Kommentars aus Sicht des Benutzers, der den Kommentar erstellt hat](doc/img/newCommentAfterPostingHomer.png)
+
+Auch für den anderen Benutzer wird der Kommentar ohne Reload zur Liste der Kommentare hinzugefügt.
+
+![Seite für eine Frage nach dem Posten eines Kommentars aus Sicht des anderen Benutzers](doc/img/newCommentAfterPostingBart.png)
+
+### Upvotes für Antworten
+
+Natürlich können auch Upvotes für hilfreiche Antworten vergeben werden, wobei ein Benutzer auch seine eigenen Antworten upvoten kann, sofern er diese für hilfreich empfindet.
+Die Abbildung unten zeigt die Ansicht des Benutzers, welcher die Antwort erstellt hat, bevor er für diese einen Upvote vergibt.
+Ein Upvote für eine Antwort kann durch Klick auf den grünen Buttons neben der Antwort vergeben werden.
+
+![Vor dem Upvote einer Antwort](doc/img/upVoteAnswerBeforeBart.png)
+
+Klickt der Benutzer nun auf den grünen Button, wird ein Upvote vergeben, die aktuelle Anzahl der Upvotes sowie die Liste der Benutzer, welche einen Upvote vergeben haben, als Ergebnis der Mutation angefordert und die Änderungen werden im Frontend angezeigt, was in der unten zu sehenden Abbildung resultiert.
+
+![Nach dem Upvote einer Antwort](doc/img/upVoteAnswerAfterBart.png)
+
+## Fragen, die der Benutzer gestellt hat
+
+Abschließend kann sich der Benutzer noch seine eigenen Fragen und die Antworten darauf in einer Seite anzeigen lassen, wie das in der unteren Abbildung dargestellt wird.
+In der unteren Abbildung ist zu sehen, dass die Frage zu Subscriptions mit Apollo nicht angezeigt wird, da sie von einem anderen Benutzer stammt.
+Ebenfalls werden die Antworten mittels eines Data-Loaders geladen, sodass nur zwei SQL-Statements anfallen: Eines für das Laden der Fragen und eines für das Laden aller Antworten auf die Fragen eines Benuzters.
+
+Ebenso wird hier die selbe GraphQL-Query verwendet wie für das Laden der Fragen auf der Startseite, nur dass zusätzlich die Antworten mitgeladen werden.
+Dies demonstriert die hohe Flexibilität der Abfragesprache GraphQL.
+
+![Alle Fragen und Antworten darauf aus Sicht des Benutzers "homer"](doc/img/myQuestions.png)

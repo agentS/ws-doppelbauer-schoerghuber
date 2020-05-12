@@ -45,7 +45,7 @@ class QuestionPage extends React.Component<QuestionPageProperties, QuestionPageS
         if (this.state.question) {
             const modifiedAnswerIndex = this.state.question.answers
                 .findIndex(answer => parseInt(answer.id) === answerId);
-            if (modifiedAnswerIndex && modifiedAnswerIndex !== (-1)) {
+            if (modifiedAnswerIndex !== (-1)) {
                 const newAnswer = update(
                     this.state.question.answers[modifiedAnswerIndex],
                     {

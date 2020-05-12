@@ -48,6 +48,7 @@ class UpVoteButton extends React.Component<UpVoteButtonProperties, UpVoteButtonS
                                                     );
                                                 } else {
                                                     alert("Could not up vote.");
+                                                    console.error(result.errors);
                                                 }
                                             })
                                             .catch(exception => {
@@ -76,6 +77,7 @@ class UpVoteButton extends React.Component<UpVoteButtonProperties, UpVoteButtonS
                                                     );
                                                 } else {
                                                     alert("Could not up vote.");
+                                                    console.error(result.errors);
                                                 }
                                             })
                                             .catch(exception => {
