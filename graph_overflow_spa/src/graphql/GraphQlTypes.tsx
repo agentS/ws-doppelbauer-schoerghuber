@@ -316,10 +316,6 @@ export type LatestQuestionsQuery = (
   & { latestQuestions: Array<(
     { __typename?: 'Question' }
     & Pick<Question, 'id' | 'title' | 'upVotes'>
-    & { tags: Array<(
-      { __typename?: 'Tag' }
-      & Pick<Tag, 'id' | 'name'>
-    )> }
   )> }
 );
 
@@ -598,10 +594,6 @@ export const LatestQuestionsDocument = gql`
     id
     title
     upVotes
-    tags {
-      id
-      name
-    }
   }
 }
     `;

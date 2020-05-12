@@ -1,5 +1,5 @@
 import React from "react";
-import { ListGroup, Col, Row, Form, Button, Badge } from "react-bootstrap";
+import { ListGroup, Col, Row, Form, Badge } from "react-bootstrap";
 
 import { SearchByTagNameComponent, Tag } from "../graphql/GraphQlTypes";
 
