@@ -35,7 +35,7 @@ class QuestionDisplay extends React.Component<QuestionDisplayProperties, Questio
                     <Col>
                         <h4>{this.props.question.title}</h4>
                         <p>{this.props.question.content}</p>
-                        <p>{this.props.question.tags.map(tag => <span><Badge variant="dark">{tag.name}</Badge>{' '}</span>)}</p>
+                        <p>{this.props.question.tags.map(tag => <span key={tag.id}><Badge variant="dark">{tag.name}</Badge>{' '}</span>)}</p>
                         <p>Created by {this.props.question.user.name} at {formatDateTime(this.props.question.createdAt)}</p>
                     </Col>
                 </Row>
