@@ -65,7 +65,7 @@ Da uns das Setup der Projekte einige Probleme bereitet hat, möchten wir in dies
 
 Zur Umsetzung des GraphQL Service haben wird uns für das Framework **GraphQL.NET** entschieden. Diese Framework bietet zwei Möglichkeiten zur Definition eines GraphQL-Schemas, nämlich den Schema First Approach und den GraphType First Approach. Wir haben uns für den GraphType First Approach entschieden.
 
-Mit diesem Framework kann ein Schema bestehend aus den Root Operations Typen Query und Mutation gut umgesetzt werden. Weiters erlaubt es dieses Framework einen REST Post-Endpunkt für Abfragen zu definieren. Diese werden anschließend an den `DocumentExecutor` des Frameworks übergeben, welcher anschließend die Abfrage auf dem zugrunde liegenden Schema auswertet. Es ist jedoch mit diesem Framework alleine nicht möglich den Root operations Typ Subscription umzusetzen. Dazu wird in der Dokumentation von [GraphQL .NET](https://graphql-dotnet.github.io/docs/getting-started/subscriptions) auf das Projekt [GraphQL Server](https://github.com/graphql-dotnet/server/) verwiesen, da ein Server benötigt wird, welcher das Subscription Protokoll implementiert.
+Mit diesem Framework kann ein Schema bestehend aus den Root Operations Typen Query und Mutation gut umgesetzt werden. Weiters erlaubt es dieses Framework einen REST Post-Endpunkt für Abfragen zu definieren. Diese werden anschließend an den `DocumentExecutor` des Frameworks übergeben, welcher anschließend die Abfrage auf dem zugrunde liegenden Schema auswertet. Es ist jedoch mit diesem Framework alleine nicht möglich den Root Operations Typ Subscription umzusetzen. Dazu wird in der Dokumentation von [GraphQL .NET](https://graphql-dotnet.github.io/docs/getting-started/subscriptions) auf das Projekt [GraphQL Server](https://github.com/graphql-dotnet/server/) verwiesen, da ein Server benötigt wird, welcher das Subscription Protokoll implementiert.
 
 Das GraphQL Server Projekt setzt auf das Framework GraphQL.NET auf und stellt einen .NET Core Server zur Verfügung welcher das Apollo GraphQL Subscription Protokoll implementiert. Für das Setup werden die nachfolgend angeführten Nuget Pakete benötigt. Da die derzeitige Version 3.4.0 mit einigen Fehlern behaftet ist (gemäß der Dokumentation) wird empfohlen auf die Alpha Version 3.5.0 auszuweichen. Diese Version beinhaltet jedoch Änderungen des Frameworks GraphQL.NET welche nicht mehr mit der aktuellen Version 2.4.0 kompatibel sind. 
 
@@ -169,7 +169,7 @@ Der nächste Schritt besteht darin, den Apollo-Client in der React-Anwendung ver
 Hierzu ist in der Datei `index.tsx`, welche vom [React-Projekt-Generator](https://reactjs.org/docs/create-a-new-react-app.html#create-react-app) erzeugt wird, eine Instanz des Clients anzulegen.
 
 Jede Instanz benötigt hierzu einen Link und einen Cache.
-Der Cache wird einfach als In-Memory-Cache realisiert und kann mit derunten zu sehenden Anweisung erzeugt werden.
+Der Cache wird einfach als In-Memory-Cache realisiert und kann mit der unten zu sehenden Anweisung erzeugt werden.
 
 ```typescript
 const cache = new InMemoryCache();
@@ -263,7 +263,7 @@ Als Namen für die Konfigurationsdatei des Generators wird der vorgeschlagene Na
 Abschließend wird als Eingabe für den Namen des Befehls zur Ausführung des Codegenerator `codegen` eingegeben.
 Die finale Ausgabe zeigt dann noch die Befehle zur Installation der Plugins sowie zur Ausführung des Codegenerators an.
 
-Es wurde, den [offiziellen Code-Generator von Apollo](https://github.com/apollographql/apollo-tooling) zu verwenden, allerdings mit eher bescheidenem Erfolg: Auf der offiziellen Projektseite ist keine wirkliche Anleitung vorzufinden und die [Anweisungen in Blog-Posts](https://www.leighhalliday.com/generating-types-apollo) haben nicht funktioniert.
+Es wurde versucht, den [offiziellen Code-Generator von Apollo](https://github.com/apollographql/apollo-tooling) zu verwenden, allerdings mit eher bescheidenem Erfolg: Auf der offiziellen Projektseite ist keine wirkliche Anleitung vorzufinden und die [Anweisungen in Blog-Posts](https://www.leighhalliday.com/generating-types-apollo) haben nicht funktioniert.
 
 # Schema
 
@@ -414,7 +414,7 @@ public class GraphQlSchema : Schema
 
 Queries sind lesende Abfragen, welche an den GraphQL Service gesendet werden können. Im Typsystem muss ein Query Graphtyp definiert werden, welcher die Einstiegspunkte in den zugrunde liegenden Graphen (das Typsystem) definiert. Hierfür muss eine Klasse definiert werden, welche wie alle Output Graphtypen von der Basisklasse `ObjectGraphType` abgeleitet werden. In dieser Klasse können dann Felder mitsamt ihren Resolver Methoden definiert werden, welche als Einstiegspunkte zum traversieren des Graphen dienen.
 
-Ein Feld entspricht im wesentlichen einer Funktion, welche Argumente entgegennehmen und einen Wert retournieren kann. Ein Feld `Field<UserGraphType>(...)` besteht dabei immer mindestens aus einem Output Graphtypen (von `ObjectGraphType` abgleiteten Klassen) und einem Namen. Der Output Graphtyp beschreibt dabei den Typ des Rückgabewerts. Weiters können Parameter und Resolver Methoden definiert werden. Im `QueryTyp` werden für alle Felder Resolver Methoden definiert, da es keine Quelle gibt, aus welcher die Feldwerte implizit ermittelt werden können. An dieser Stelle ist jedoch darauf hinzuweisen, dass keine Output Graphtypen als Parameter Typen verwendet werden können. Hierfür müssen eigene Input Graphtypen mitsamt ihren Feldern deifniert werden, welche von der Klasse `InputObjectGraphType<...>` abgleitet werden müssen. Skalare Parametertypen können jedoch ohne weiteres als Output- sowie auch als Input GraphTypen verwendet werden.
+Ein Feld entspricht im wesentlichen einer Funktion, welche Argumente entgegennehmen und einen Wert retournieren kann. Ein Feld `Field<UserGraphType>(...)` besteht dabei immer mindestens aus einem Output Graphtypen (von `ObjectGraphType` abgleitete Klassen, oder skalare Typen) und einem Namen. Der Output Graphtyp beschreibt dabei den Typ des Rückgabewerts. Weiters können Parameter und Resolver Methoden definiert werden. Im `QueryTyp` werden für alle Felder Resolver Methoden definiert, da es keine Quelle gibt, aus welcher die Feldwerte implizit ermittelt werden können. An dieser Stelle ist jedoch darauf hinzuweisen, dass keine Output Graphtypen als Parameter Typen verwendet werden können. Hierfür müssen eigene Input Graphtypen mitsamt ihren Feldern deifniert werden, welche von der Klasse `InputObjectGraphType<...>` abgleitet werden müssen. Skalare Parametertypen können jedoch ohne weiteres als Output- sowie auch als Input GraphTypen verwendet werden.
 
 Zum ermitteln der einzelnen Feldwerte werden Services an den Graphtypen mittels Dependency Injection übergeben, welche anschließend in den Resolver Methoden verwendet werden.
 
@@ -611,7 +611,7 @@ public interface IAnswerDao
 }
 ```
 
-Abschließend ist noch die SQL-Abfrage, welche vom DAO-Objekt zur Laden aller Antworten auf die übergebenen Frage-IDs verwendet wird, angegeben.
+Abschließend ist noch die SQL-Abfrage, welche vom DAO-Objekt zum Laden aller Antworten auf die übergebenen Frage-IDs verwendet wird, angegeben.
 Diese Abfrage verwendet mit `ANY` eine mit [C# und ADO.NET kompatible Form](https://www.ankursheel.com/blog/query-in-clause-dapper-npgsql/) von `IN`.
 
 ```sql
@@ -627,7 +627,7 @@ Für die Generierung des GraphQL-Client-Codes wird das Projekt [GraphQL-Code-Gen
 Dieses generiert aus GraphQL-Queries React-Komponenten, mit denen diese Abfragen abgesetzt werden und die Ergebnisse dann direkt visualisiert werden können.
 
 Hierzu ist zu Beginn die Abfrage zu erstellen und in einer Datei mit der Endung `.graphql` im Verzeichnis `src/graphql` zu speichern.
-Z.B. ist die Abfrage zum Anzeigen der Abfragen eines Benutzers in der Datei `src/graphql/myQuestions.graphql` gespeichert, deren Inhalt im folgenden Quellcodeauszug ersichtlich ist.
+Z.B. ist die Abfrage zum Anzeigen der Fragen eines Benutzers in der Datei `src/graphql/myQuestions.graphql` gespeichert, deren Inhalt im folgenden Quellcodeauszug ersichtlich ist.
 
 ```graphql
 query myQuestions($userId: Int!) {
@@ -997,7 +997,7 @@ mutation postComment($answerId: Int!, $content: String!) {
 
 Nach erfolgter Generierung kann das Formular von der Komponente `PostCommentComponent` umschlossen werden, damit in dem Handler für das Submit-Event die Funktion `mutate` ausgeführt werden kann, wie der unten zu sehende Quellcodeauszug verdeutlicht.
 Ebenfalls werden in diesem Fall die GraphQL-Variablenbelegungen als Parameter der Funktion `mutate` übergeben, da diese ja von Benutzereingaben abhängen.
-Auf das Ergebnis der Funktion `mutate` wird nicht reagiert, da das neue Kommentar ohnehin aufgrund der aktiven Subscription für neuen Kommentare angezeigt.
+Auf das Ergebnis der Funktion `mutate` wird nicht reagiert, da das neue Kommentar ohnehin aufgrund der aktiven Subscription für neue Kommentare angezeigt wird.
 
 ```tsx
 // ...
@@ -1440,15 +1440,65 @@ class QuestionPage extends React.Component<QuestionPageProperties, QuestionPageS
 # Login
 
 ## Server
+Die Login Funktionalität wurde auf der Server Seite mittels einer Mutation realisiert. Ein Benutzer übergibt seinen Benutzernamen und sein Passwort in Form eines Input Objekts als Argument und bekommt ein Objekt vom Typ `AuthPayloadGraphType` retourniert. Dieses Objekt enthält auch einen JWT Token, welcher vom Client für nachfolgende Abfragen mitgeschickt wird, solange der Benutzer angemeldet ist.
+
+```C#
+public class AuthPayloadGraphType : ObjectGraphType<AuthPayloadDto>
+{
+	#region Construction
+	public AuthPayloadGraphType()
+	{
+		InitializeName();
+		InitializeFields();
+	}
+
+	private void InitializeName()
+	{
+		Name = "AuthPayload";
+	}
+
+	private void InitializeFields()
+	{
+		Field<NonNullGraphType<UserGraphType>>("user");
+		Field<NonNullGraphType<StringGraphType>>("token");
+	}
+	#endregion Construction
+}
+```
+
+```C#
+private void InitializeFields()
+{
+	// ...
+	Field<AuthPayloadGraphType>(
+		name: "login",
+		arguments: new QueryArguments(
+			new QueryArgument<NonNullGraphType<UserLoginInputGraphType>> { Name = "loginData" }
+		),
+		resolve: ResolveUserLogin
+	).Description = "user login";
+}
+#endregion Construction
+
+#region Resolvers
+// ...
+private object ResolveUserLogin(IResolveFieldContext<object> context)
+{
+	var userLoginData = context.GetArgument<UserLoginInputDto>("loginData");
+	var result = authenticationService.Authenticate(userLoginData);
+	return result;
+}
+// ...
+```
 
 Der Gegenstand der Authentifizierung und Autorisierung von Benutzern, welche einen GraphQL Graphen traversieren ist ein sehr spannendes Thema, da das GraphQL Typsystem in alle Richtungen traversiert werden kann. Zur Umsetzung dieses Gegenstandes gibt es mehrere Ansätze:
-* Es wird die Authentifizierung und Autorisierung des GraphQL Service auf Ebene der Route zum Service durchgeführt. Der Vorteil diese Vorgehens besteht darin, dass Authentifizierung und Autorisierung aus der Definition des GraphQL Typsystems herausgezogen werden. Der Nachteil dieses Vorgehens ist jedoch, dass die Granularität sehr grob ist. Ein Benutzer darf den Service benutzen, oder er darf es nicht.
+* Es wird die Authentifizierung und Autorisierung des GraphQL Service auf Ebene der Route zum Service durchgeführt. Der Vorteil dieses Vorgehens besteht darin, dass Authentifizierung und Autorisierung aus der Definition des GraphQL Typsystems herausgezogen werden. Der Nachteil dieses Vorgehens ist jedoch, dass die Granularität sehr grob ist. Ein Benutzer darf den Service benutzen, oder er darf es nicht.
 
 * Soll jedoch auf Feldebene entschieden werden, ob eine bestimmte Benutzergruppe (z.B.: User, Admin) berechtigt ist das jeweilige Feld zu benutzen oder nicht, ist das zuvor beschriebene Vorgehen nicht ausreichend. Demnach muss auf Feldebene definiert werden, ob ein Benutzer angemeldet sein muss (Authentifizierung) und welches Recht er besitzen muss (Autorisierung), um das jeweilige Feld zu verwenden.
 
-Wir haben uns für die spannendere Variante, die Definition auf Feldebene, entschieden. Dazu verwenden wir den GraphQL `UserContext` welcher zu Beginn einer Anfrage erstellt wird und dann für die gesamte Abarbeitungszeit der Abfrage als Daten Container zur Verfügung steht.
+Wir haben uns für die spannendere Variante, die Definition auf Feldebene, entschieden. Dazu verwenden wir den GraphQL `UserContext` welcher zu Beginn einer Anfrage erstellt wird und dann für die gesamte Abarbeitungszeit der Abfrage als Daten Container zur Verfügung steht. Hierbei haben wir uns an den Implementierungsvorschlag der GraphQL.NET Dokumentation gehalten.
 
-Dieser UserContext wird zu Beginn eines HTTP Requests mittels eines Builders erstellt. Beim Erstellen kann auf den `HttpContext` des Requests zugegriffen werden. Diesen verwenden wir um den übermittelten, wenn enthalten, JWT Token auszulesen und durch den `AuthenticationService` zu validieren. Ist der Token valide wird der User mitsamt seinen Rechten/Claims im GraphQL UserContext hinterlegt. Durch die Abfrage des Properties `User` kann später ermittelt werden, ob ein Benutzer angemeldet ist oder nicht. 
+Der UserContext wird zu Beginn eines HTTP Requests mittels eines Builders erstellt. Beim Erstellen kann auf den `HttpContext` des Requests zugegriffen werden. Diesen verwenden wir um den übermittelten, wenn enthalten, JWT Token auszulesen und durch den `AuthenticationService` zu validieren. Ist der Token valide wird der User mitsamt seinen Rechten/Claims im GraphQL UserContext hinterlegt. Durch die Abfrage des Properties `User` kann später ermittelt werden, ob ein Benutzer angemeldet ist oder nicht. 
 ```C#
 // ...
 .AddUserContextBuilder(GraphQlUserContext.UserContextCreator)
@@ -1600,7 +1650,7 @@ public class RequiresAuthValidationRule : IValidationRule
 
 ## Client
 
-Um auch die direkte Verwendung des Apollo-Clients zu demonstrieren, wird die Mutation zum Login direkt im Formular für den Login ausgeführt, ohne dass auf generierte Komponenten zurückgegriffen wird.
+Um auch die direkte Verwendung des Apollo-Clients zu demonstrieren, wird die **Mutation zum Login** direkt im Formular für den Login ausgeführt, ohne dass auf generierte Komponenten zurückgegriffen wird.
 Allerdings werden die generierten DTOs des Schemas schon verwendet, da dadurch Codeduplizierung vermieden wird.
 Hierfür ist die GraphQL-Manipulation erneut in eine Datei mit der Endung `.graphql` im Verzeichnis `src/graphql` zu kopieren, da das Plugin zur Erkennung von GraphQL-Strings im Code nicht funktioniert hat.
 
